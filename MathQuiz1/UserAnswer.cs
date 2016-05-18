@@ -58,6 +58,11 @@ namespace MathQuiz1
                 return isDeci;
             }
         }
+        /// <summary>
+        /// Sätta en UserAnswer-instans med en string
+        /// </summary>
+        /// <param name="str">Takes a number - use "," for comma</param>
+        /// <returns></returns>
         public bool SetAnswer(string str)
         {
             int tenTimesBigger;

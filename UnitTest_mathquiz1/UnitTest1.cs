@@ -70,7 +70,7 @@ namespace UnitTest_mathquiz1
         public void TestUserAnswerIs10AndHalf()
         {
             UserAnswer ua = new UserAnswer();
-            ua.SetAnswer("10.5");
+            ua.SetAnswer("10,5");
             Assert.AreEqual(ua.FloatValue, 10.5f);
         }
     }

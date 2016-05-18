@@ -1,0 +1,16 @@
+﻿divisionMax1=15
+divisionMin1=5
+divisionMax2=10
+divisionMin2=1
+multiplicationMax1=11
+multiplicationMin1=0
+multiplicationMax2=14
+multiplicationMin2=1
+aditionMax1=60
+aditionMin1=-1
+aditionMax2=75
+aditionMin2=10
+subtractionMax1=200
+subtractionMin1=5
+subtractionMax2=155
+subtractionMin2=1

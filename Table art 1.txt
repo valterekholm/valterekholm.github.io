@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Table art</title>
+<style type="text/css">
+table,th,td{
+border: 1px solid black;
+}
+
+</style>
+</head>
+<body>
+
+<!--button onClick=alert(diagonalToHorisontalX(3,2));alert(diagonalToHorisontalY(3,2))>DTH</button>-->
+<script type="text/javascript">
+width=10;
+height=10;//in cells
+pixels=20;//corn radi 10 circle
+
+function diagonalToHorisontalX(xval,yval){
+var peak = xval*xval+yval*yval;
+return Math.sqrt(peak);
+}
+
+function diagonalToHorisontalY(xval,yval){
+//gör en spegelpunkt på andra sidan diagonalen
+
+var x2=yval;
+var y2=xval;
+
+//avstånd
+var distx=Math.abs(xval-x2);
+var disty=Math.abs(yval-y2);
+
+var peak=distx*distx+disty*disty;
+var dist=Math.sqrt(peak);
+
+return dist/2;
+}
+
+function getYOff(val){
+if(val==0){
+return 1}
+else if(val<1 && val>-1){
+return 1
+}
+else
+return Math.abs(1/val);
+}
+window.onload=function(){
+
+var art_table = document.createElement("table");
+var tb = document.createElement("tbody");
+for(var i=0;i<height;i++){
+var tr = document.createElement("tr");
+for(var j=0;j<width;j++){
+var td = document.createElement("td");
+var newX = diagonalToHorisontalX(j,i);
+var newY = diagonalToHorisontalY(j,height-i);
+var yOff = getYOff(newY);
+
+var twoDec = Math.round(yOff*100)/100;
+
+td.style.width = pixels+"px";
+td.style.height= pixels+"px";
+var brad = twoDec*pixels/2;
+td.style.borderRadius = brad+"px "+(pixels/2)+"px "+brad+"px "+(pixels/2)+"px";
+
+//color
+var r=Math.round(((width-j)/width)*255);
+var g=Math.round((j/width)*255);
+var b=175;
+var alp = (i/height);
+
+td.style.backgroundColor="rgba("+r+","+g+","+b+",0.5)";
+
+
+//td.innerHTML=twoDec;
+tr.appendChild(td);
+}
+tb.appendChild(tr);
+}
+art_table.appendChild(tb);
+document.body.appendChild(art_table);
+}
+</script>
+</body>
+</html>

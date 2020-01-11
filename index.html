@@ -1,89 +1,576 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML>
 <html>
 <head>
-<title>Table art</title>
+<title>F(x) Square Shooter v.1</title>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style type="text/css">
-table,th,td{
+<style>
+body{
+font-size:16px;
+margin: 0;
+}
+#board{
+position: relative;
+width: 700px;
+height: 700px;
+border: 1px solid gray;
+background: rgba(200,200,100,.3);
+background-image: url("circle.png");
+background-repeat: no-repeat;
+background-position: -22px 680px;
+margin: 10px auto;
+overflow: hidden;
+}
+#gun{
+position: absolute;
+left: 0;
+bottom: 0;
+width: 100px;
+height: 100px;
+background-image: url("line45.png");
+background-size: cover;
+}
+#gun_{
+position: absolute;
+left: 0;
+bottom: 0;
+width: 100px;
+height: 100px;
+}
+#beam{
+position: absolute;
+left: 100px;
+bottom: 0;
+width: 50px;
+height: 50px;
+}
+#window{
+position: absolute;
+width: 150px;
+height: 1px;
 border: 1px solid black;
+right: 100px;
+background-color: black;
+opacity: 1;
+visibility: hidden;
+transition: border 1s, opacity 2s, background-color 1s;
+}
+
+#info{
+position:absolute;
+top:0;
+right:0;
+width:20px;
+height:20px;
+background-color:green;
+border: 2px solid #4a5;
+text-align: center;
+cursor: pointer;
+transition: all 3s;
+font-size: 1em;
+}
+#info.bigger{
+width:30px;
+height:30px;
+font-size: 1.1em;
+}
+
+.holder{
+background: white;
+text-align: center;
+}
+
+#window.blow{
+    border: 4px dotted red;
+    background-color: gray;
+    border-radius: 3px;
+    padding: 3px;
+    opacity: 0;
+}
+#window.vanish{
+    border: 4px dotted red;
+    background-color: gray;
+    border-radius: 3px;
+    padding: 3px;
+    opacity: 0;
+}
+#banner{
+position: fixed;
+width:50%;
+left: -25%;
+margin: 0 auto;
+padding:40px 20px;
+text-align: center;
+background-color: rgba(255,255,255,.5);
+opacity:0;
+transition: all 1s;
+z-index: 100;
+}
+#banner.showing{
+opacity:1;
+left: 10%;
+width: 80%;
+}
+
+#hearts{
+padding: 15px;
+}
+
+#points{
+text-align: center;
 }
 
 </style>
 </head>
 <body>
+<div class="holder">
 
-<!--button onClick=alert(diagonalToHorisontalX(3,2));alert(diagonalToHorisontalY(3,2))>DTH</button>-->
-<script type="text/javascript">
-width=10;
-height=10;//in cells
-pixels=20;//corn radi 10 circle
+<div id="banner"></div>
+<div id="board">
+<div id="info" class="bigger">?</div>
 
-function diagonalToHorisontalX(xval,yval){
-var peak = xval*xval+yval*yval;
-return Math.sqrt(peak);
+
+<!--div id="gun">
+</div-->
+
+<div id="window"></div>
+
+<img src="line45.png" id="gun_">
+<img src="line45.png" id="beam">
+</div>
+
+</div><!-- holder -->
+
+<div class="holder">
+
+<button id="decrease"><--</button>
+<button id="increase">--></button>
+<input id="status" type="number" readonly>
+<input type="button" id="fire" value="Fire">
+</div>
+
+<div class="holder" id="hearts">
+</div>
+
+<div class="holder" id="points"></div>
+
+<script>
+/*Gun movement must be max one degree at a time, se note A*/
+GUN_SIZE = 100;
+BEAM_SIZE = 25;
+SWITCH_IMG_LOW = 20;
+SWITCH_IMG_LOW2 = 10;
+SWITCH_IMG_HIGH = 70;
+SWITCH_IMG_HIGH2 = 80;
+WAIT_AFTER_HIT = 3000;
+minHitDecay = 1000;
+MAX_TARGET_STEP = 5;//higher is faster
+angle = 45; oldAngle = 0;
+
+interv1 = null;
+intervBeam = null;
+intervTarget = null;
+
+interv1_copy = null;
+intervBeam_copy = null;
+intervTarget_copy = null;
+
+intervBeam_ = 80;
+targetStep = 1;
+intervWindow_ = 20;
+statusField = null;
+gunImg = null;
+fireBtn = null;
+beamImg = null;
+window_ = null;//target
+info = null;
+banner = null;//banner for info
+fx = 2;
+
+hearts = null; //eleme
+heartsCount = 10;
+
+points = null; //eleme
+pointsCount = 0;
+
+
+is_fired = false;
+
+outerX = 700;
+outerY = 700;//todo: make as board size
+
+sizes = []; //img_sizes
+
+window.onload = function(){
+
+window.addEventListener("keydown", function(ev){
+//todo make like keypress but for arrow btns
+    console.log(ev);
+    switch(ev.keyCode){
+        case 32:
+            //console.log("SPACE");
+            fireHit();
+        break;
+        case 38://up
+        case 37://left
+            moveGun(-1);
+        break;
+        case 39:
+        case 40:
+            moveGun(1);
+        break;
+        case 65: //a
+            makeBreak();
+        break;
+        case 73: //i
+            increaseTargetSpeed();
+        break;
+    }
+});
+
+
+info = document.querySelector("#info");
+
+info.addEventListener("click", function(){
+    messageBanner("<h1>Use arrows to aim, fire with space-bar.</h1>");
+});
+
+info.className = "";//for animation (transition)
+
+points = document.querySelector("#points");
+
+banner = document.querySelector("#banner");
+
+//test
+var testy = 3;
+var testx = getXFromY(testy);
+console.log("testx from y "+testy+" :" + testx);
+
+for(var i=0; i<90; i++){
+    sizes.push(getWidthHeight(i, GUN_SIZE));
+//console.log("i " + i + ": " + Math.sin(i / 360 * Math.PI * 2));
 }
 
-function diagonalToHorisontalY(xval,yval){
-//gör en spegelpunkt på andra sidan diagonalen
+statusField = document.querySelector("#status");
+gunImg = document.querySelector("#gun_");
+beamImg = document.querySelector("#beam");
+window_ = document.querySelector("#window");
+setImgSizes(gunImg, sizes[45]);
 
-var x2=yval;
-var y2=xval;
 
-//avstånd
-var distx=Math.abs(xval-x2);
-var disty=Math.abs(yval-y2);
+var decr = document.querySelector("#decrease");
+var incr = document.querySelector("#increase");
+fireBtn = document.querySelector("#fire");
 
-var peak=distx*distx+disty*disty;
-var dist=Math.sqrt(peak);
+decr.addEventListener("mousedown", function(){console.log("decrease down"); triggerGunMove(-1)});
+decr.addEventListener("mouseup", function(){console.log("decrease up"); abortGunMove()});
 
-return dist/2;
+incr.addEventListener("mousedown", function(){console.log("increase down"); triggerGunMove(+1)});
+incr.addEventListener("mouseup", function(){console.log("increase up"); abortGunMove()});
+
+fireBtn.addEventListener("click", function(){
+    fireHit();
+});
+
+
+
+
+//auto update the angle status field
+setInterval(function(){statusField.value = angle;}, 100);
+
+initTarget();
+initBeam(beamImg, angle);
+
+hearts = document.querySelector("#hearts");
+for(var i=0; i<heartsCount; i++){
+    drawOneHeart();
+    }
+
 }
 
-function getYOff(val){
-if(val==0){
-return 1}
-else if(val<1 && val>-1){
-return 1
+function fireHit(){
+    if(is_fired){ return }
+
+    initBeam(beamImg, angle);
+    shoot(beamImg, angle);
+    is_fired = true;
+
+    disableButton(fireBtn);
 }
-else
-return Math.abs(1/val);
+
+/*pass 1 or -1*/
+function triggerGunMove(step){
+    interv1 = setInterval(
+    function(){
+        oldAngle = angle; //Note A: save old to compare in order to know when to switch image file
+        angle += parseInt(step);
+        //console.log(angle);
+        var wh = sizes[angle]; //getWidthHeight(angle, GUN_SIZE);
+        //console.log(wh);
+        setImgSizes(gunImg, wh);
+        var switchCheck = checkIfThinSwitch(angle, oldAngle);
+        if(switchCheck == -2) setImgSrc(gunImg, "line10.png");
+        else if(switchCheck == -1) setImgSrc(gunImg, "line22_5.png");
+        else if(switchCheck == 0) setImgSrc(gunImg, "line45.png");
+        else if(switchCheck == 1) setImgSrc(gunImg, "line67_5.png");
+        else if(switchCheck == 2) setImgSrc(gunImg, "line80.png");
+    }, 100);
 }
-window.onload=function(){
-
-var art_table = document.createElement("table");
-var tb = document.createElement("tbody");
-for(var i=0;i<height;i++){
-var tr = document.createElement("tr");
-for(var j=0;j<width;j++){
-var td = document.createElement("td");
-var newX = diagonalToHorisontalX(j,i);
-var newY = diagonalToHorisontalY(j,height-i);
-var yOff = getYOff(newY);
-
-var twoDec = Math.round(yOff*100)/100;
-
-td.style.width = pixels+"px";
-td.style.height= pixels+"px";
-var brad = twoDec*pixels/2;
-td.style.borderRadius = brad+"px "+(pixels/2)+"px "+brad+"px "+(pixels/2)+"px";
-
-//color
-var r=Math.round(((width-j)/width)*255);
-var g=Math.round((j/width)*255);
-var b=175;
-var alp = (i/height);
-
-td.style.backgroundColor="rgba("+r+","+g+","+b+",0.5)";
-
-
-//td.innerHTML=twoDec;
-tr.appendChild(td);
+/*When button is released*/
+function abortGunMove(){
+    clearInterval(interv1);
 }
-tb.appendChild(tr);
+
+function moveGun(step){
+        oldAngle = angle; //Note A: save old to compare in order to know when to switch image file
+        angle += parseInt(step);
+        //console.log(angle);
+        var wh = sizes[angle]; //getWidthHeight(angle, GUN_SIZE);
+        //console.log(wh);
+        setImgSizes(gunImg, wh);
+        var switchCheck = checkIfThinSwitch(angle, oldAngle);
+        if(switchCheck == -2) setImgSrc(gunImg, "line10.png");
+        else if(switchCheck == -1) setImgSrc(gunImg, "line22_5.png");
+        else if(switchCheck == 0) setImgSrc(gunImg, "line45.png");
+        else if(switchCheck == 1) setImgSrc(gunImg, "line67_5.png");
+        else if(switchCheck == 2) setImgSrc(gunImg, "line80.png");
 }
-art_table.appendChild(tb);
-document.body.appendChild(art_table);
+
+function getWidthHeight(ang, factor){
+    var sinus = Math.sin(ang / 360 * Math.PI * 2);
+    var cosinus = Math.cos(ang / 360 * Math.PI * 2);
+    var ret = {};
+    ret.width = sinus * factor;
+    ret.height = cosinus * factor;
+    return ret;
+}
+
+function setImgSizes(imgElem, sizes){
+    imgElem.style.width = sizes.width+"px";
+    imgElem.style.height = sizes.height+"px";
+}
+
+function checkIfThinSwitch(angle_, oldAngle_){
+    if(angle_ == SWITCH_IMG_LOW2 && oldAngle_ == SWITCH_IMG_LOW2+1) return -2;
+    else if(angle_ == SWITCH_IMG_LOW && oldAngle_ == SWITCH_IMG_LOW+1 || angle_ == SWITCH_IMG_LOW2+1 && oldAngle_ == SWITCH_IMG_LOW2) return -1;
+    else if(angle_ == SWITCH_IMG_HIGH && oldAngle_ == SWITCH_IMG_HIGH-1 || angle_ == SWITCH_IMG_HIGH2-1 && oldAngle_ == SWITCH_IMG_HIGH2) return 1;
+    else if(angle_ == SWITCH_IMG_HIGH2 && oldAngle_ == SWITCH_IMG_HIGH2-1) return 2;
+    else if(angle_ == SWITCH_IMG_LOW+1 && oldAngle_ == SWITCH_IMG_LOW || angle_ == SWITCH_IMG_HIGH-1 && oldAngle_ == SWITCH_IMG_HIGH) return 0;
+    return null;
+}
+
+function setImgSrc(imgElem, fileName){
+    imgElem.src = fileName;
+}
+
+function initBeam(beamImg_, angle_){
+    var wh = getWidthHeight(angle_, GUN_SIZE);
+    beamImg_.style.left = wh.width + "px";
+    beamImg_.style.bottom = wh.height + "px";//setting pos
+    beamImg_.style.visibility = "hidden";
+    is_fired = false;
+
+    drawPoints();//test
+    enableButton(fireBtn);
+}
+
+function drawPoints(){
+    var h3 = document.createElement("h3");
+    h3.innerHTML = pointsCount;
+    points.innerHTML = "";
+    points.appendChild(h3);
+}
+
+function shoot(beamImg_, angle_){
+    console.log("shoot angle " + angle_);
+    var wh2 = getWidthHeight(angle_, BEAM_SIZE);
+    var width = wh2.width;
+    beamImg_.style.width = width + "px";
+    var height = wh2.height;
+    beamImg_.style.height = height + "px";
+    beamImg_.style.visibility = "visible";//todo:hide when needed
+    var tan = Math.tan(angle_ * Math.PI/180);
+    fx = 1 / tan; //what could be used in a formula f(x), y as function of x
+    console.log("fx is set to " + fx);
+    console.log("Tan is " + tan + " fx? " + fx);
+    intervBeam = setInterval(function(){
+        moveBeam(beamImg_, width, height);        
+    }, intervBeam_);//extract
+}
+
+function moveBeam(beamImg_, stepX, stepY){
+    stepX *= .9;
+    stepY *= .9;//test to make path covered
+
+    var px = parseInt(beamImg.style.left);
+    var py = parseInt(beamImg.style.bottom);
+    px += parseInt(stepX);
+    py += parseInt(stepY);//pos x y
+    beamImg_.style.left = px + "px";
+    beamImg_.style.bottom = py + "px";
+    //console.log(px);
+    if(px > outerX || py > outerY){
+        cancelBeam();
+        initBeam(beamImg, angle);
+        is_fired = false;
+    }
+}
+
+function cancelBeam(){
+    clearInterval(intervBeam);
+}
+
+function initTarget(){
+    var targetHighest = 600;
+    var targetLowest = 170;//hight from "ground"
+
+    var minLen = 100, maxLen=200;
+
+    window_.style.left = outerX + "px";
+    var rand = Math.random();
+    var diff = targetHighest - targetLowest;
+    var y = rand*diff+targetLowest;
+    window_.style.bottom = parseInt(y)+"px";
+    //console.log("window_ bottom set to " + y + ", " + window_.style.bottom);
+    var rand2 = Math.random();
+    var diff2 = maxLen - minLen;
+    var len = rand2*diff2+minLen;
+    window_.style.width = parseInt(len) + "px";
+    window_.style.visibility = "visible";
+    window_.className = "";
+
+    intervTarget = setInterval(function(){
+        var posx = parseInt(window_.style.left);
+        posx-=parseInt(targetStep);
+        window_.style.left = posx + "px";
+        var width = parseInt(window_.style.width);
+        var posy = parseInt(window_.style.bottom);
+
+        //collision check
+        //1. is beam in same x
+        var beamL = getBeamLeft();
+        var beamR = getBeamRight();
+        var beamBottom = getBeamBottom();
+        var beamTop = getBeamTop();
+        if(posx < parseInt(len)*-1){
+            console.log("<0");
+            clearInterval(intervTarget);
+            initTarget();
+            heartsCount--;
+            removeLastChild(hearts);
+            if(heartsCount==0){
+                makeBreak();
+                messageBanner("<h1>Game Over</h1>");
+            }
+            //setTimeout(function(){}, 300);            
+        }
+        if(AOverlapsB(beamL, beamR, posx, posx+width)){
+            //2. get x for y (window)
+            var x = getXFromY(posy); //x for y the height of the window
+            //is x inbetween window x1, x2
+            if(x >= posx && x <= posx+width){
+                //console.log("Crossing path x:" + x + ", posx1:" + posx + "posx2: " + (posx+width));
+                if(beamBottom < posy && beamTop > posy){
+                    console.log("Hit x:" + x + ", posx1:" + posx + "posx2: " + (posx+width));
+                    pointsCount += parseInt(posy*targetStep)+angle; //height of target, speed of it, angle of gun
+                    cancelBeam();
+                    initBeam(beamImg, angle);
+                    window_.className += " blow";
+                    clearInterval(intervTarget);//moved from timeOuted function below because of error if shooting again after hit
+                    if(targetStep <= MAX_TARGET_STEP){ increaseTargetSpeed() }
+                    
+                    setTimeout(
+                        function(){
+                            //clearInterval(intervTarget); //moved up
+                            initTarget();
+                            is_fired = false;
+                        }, WAIT_AFTER_HIT);
+                    if(WAIT_AFTER_HIT > minHitDecay){ WAIT_AFTER_HIT-=100; }
+                    fx = 0;
+                }
+            }
+            else{
+                console.log("Miss x:" + x + ", posx1:" + posx + "posx2: " + (posx+width));
+            }
+        } 
+    }, intervWindow_);   
+}
+
+function increaseTargetSpeed(){
+    targetStep += 0.5;
+}
+
+function getBeamBottom(){
+    var py = parseInt(beamImg.style.bottom);
+    return py;
+}
+
+function getBeamTop(){
+    var py = parseInt(beamImg.style.bottom);
+    var height = parseInt(beamImg.style.height);
+    return py + height;
+}
+
+function getFx(x){
+    return x * fx;
+}
+
+function getXFromY(y){
+    console.log("getXFromY " + y + " and fx is " + fx);
+    return y / fx;
+}
+
+function getBeamLeft(){
+    var px = parseInt(beamImg.style.left);
+    return px;
+}
+
+function getBeamRight(){
+    var px = parseInt(beamImg.style.left);
+    var width = parseInt(beamImg.style.width);
+    return px+width;
+}
+
+
+function AOverlapsB(aMin, aMax, bMin, bMax){
+    if(aMin > aMax || bMin > bMax) return false;
+
+    var overlap = aMin < bMax && bMin < aMax;
+
+    return overlap;// from https://stackoverflow.com/questions/13513932/algorithm-to-detect-overlapping-periods
+}
+
+function messageBanner(html){
+    banner.className="showing";
+    setTimeout(function(){banner.innerHTML = html}, 500);
+    setTimeout(function(){banner.className = ""}, 3500);
+}
+
+//brakes game
+function makeBreak(){
+    clearInterval(interv1);
+    clearInterval(intervBeam);
+    clearInterval(intervTarget);//todo: make startable
+}
+
+function drawOneHeart(){
+    var newHeart = document.createElement("img");
+    newHeart.src = "heart.png";
+    hearts.appendChild(newHeart);
+}
+
+function removeLastChild(container){
+    var lc = container.lastElementChild;
+    container.removeChild(lc);
+}
+
+function disableButton(elem){
+    elem.disabled = true;
+}
+function enableButton(elem){
+    elem.disabled = false;
 }
 </script>
+
 </body>
 </html>

@@ -119,6 +119,10 @@ width: 80%;
 #hearts{
 padding: 15px;
 }
+    
+#hearts img{
+margin: 4px;
+}
 
 #points{
 text-align: center;
@@ -140,7 +144,7 @@ text-align: center;
 <div id="window"></div>
 
 <img src="line45.png" id="gun_">
-<img src="line45.png" id="beam">
+<img src="line45b.png" id="beam">
 </div>
 
 </div><!-- holder -->
@@ -373,6 +377,28 @@ function initBeam(beamImg_, angle_){
     beamImg_.style.bottom = wh.height + "px";//setting pos
     beamImg_.style.visibility = "hidden";
     is_fired = false;
+    
+    
+    if(angle_ < 11){
+        beamImg_.src = "line10b.png";
+    }
+    else if(angle_ < 15){
+        console.log("line10b.png");
+        beamImg_.src = "line10b.png";
+        console.log(beamImg_.src);
+    }
+    else if(angle_ < 25){
+        beamImg_.src = "line22_5b.png";
+    }
+    else if(angle_ > 65){
+        beamImg_.src = "line67_5b.png";
+    }
+    else if(angle_ > 79){
+        beamImg_.src = "line80b.png";
+    }
+    else{
+        beamImg_.src = "line45b.png";
+    }
 
     drawPoints();//test
     enableButton(fireBtn);

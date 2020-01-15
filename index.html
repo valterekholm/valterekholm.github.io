@@ -583,7 +583,7 @@ function initTarget(){
                 //console.log("Crossing path x:" + x + ", posx1:" + posx + "posx2: " + (posx+width));
                 if(beamBottom < posy && beamTop > posy){
                     console.log("Hit x:" + x + ", posx1:" + posx + ", posx2: " + (posx+width));
-                    pointsCount += parseInt(posy*targetStep)+len+Math.abs(angle); //height of target, speed of it, angle of gun
+                    pointsCount += parseInt(posy*targetStep)+len+angle; //height of target, speed of it, angle of gun
                     cancelBeam();
                     initSvgBeam(angle);
                     window_.className += " blow";

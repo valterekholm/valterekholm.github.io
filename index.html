@@ -1,17 +1,22 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>F(x) Square Shooter v.1</title>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F(x) square_shooter v.2</title>
 <style>
 body{
 font-size:16px;
 margin: 0;
 }
 button, input[type="button"], input[type="number"]{
-    font-size:40px;
-    width: 23%;
+font-size:40px;
+width: 23%;
+}
+#decrease:before{
+    content: "<--";
+}
+#increase:before{
+    content: "-->";
 }
 #board{
 position: relative;
@@ -21,13 +26,13 @@ border: 1px solid gray;
 background: rgba(200,200,100,.3);
 background-image: url("circle.png");
 background-repeat: no-repeat;
-background-position: -22px 680px;
+background-position: 328px 680px;
 margin: 10px auto;
 overflow: hidden;
 }
 #gun{
 position: absolute;
-left: 0;
+left: 350px;
 bottom: 0;
 width: 100px;
 height: 100px;
@@ -36,7 +41,7 @@ background-size: cover;
 }
 #gun_{
 position: absolute;
-left: 0;
+left: 350px;
 bottom: 0;
 width: 100px;
 height: 100px;
@@ -119,10 +124,6 @@ width: 80%;
 #hearts{
 padding: 15px;
 }
-    
-#hearts img{
-margin: 4px;
-}
 
 #points{
 text-align: center;
@@ -143,16 +144,23 @@ text-align: center;
 
 <div id="window"></div>
 
-<img src="line45.png" id="gun_">
-<img src="line45b.png" id="beam">
+<!--img src="line45.png" id="gun_"-->
+<svg height="100" width="100" style="position:absolute; bottom:0; left: 300px" id="svgGun">
+    <line x1="50" y1="100" x2="50" y2="0" style="stroke:rgb(0,0,0);stroke-width:2" id="line1" />
+</svg>
+
+<!--img src="line45.png" id="beam"-->
+<svg height="50" width="50" style="position:absolute; bottom:0; left: 300px" id="svgBeam">
+    <line x1="0" y1="50" x2="50" y2="50" style="stroke:rgb(0,0,0);stroke-width:2" id="line2" />
+</svg>
 </div>
 
 </div><!-- holder -->
 
 <div class="holder">
 
-<button id="decrease"><--</button>
-<button id="increase">--></button>
+<button id="decrease"></button>
+<button id="increase"></button>
 <input id="status" type="number" readonly>
 <input type="button" id="fire" value="Fire">
 </div>
@@ -165,15 +173,15 @@ text-align: center;
 <script>
 /*Gun movement must be max one degree at a time, se note A*/
 GUN_SIZE = 100;
-BEAM_SIZE = 25;
-SWITCH_IMG_LOW = 20;
-SWITCH_IMG_LOW2 = 10;
-SWITCH_IMG_HIGH = 70;
-SWITCH_IMG_HIGH2 = 80;
+BEAM_SIZE = 50;
+GUN_X_OFFSET = 350;
+SVG_GUN_WIDTH = 100;//ALSO HEIGHT
 WAIT_AFTER_HIT = 3000;
 minHitDecay = 1000;
 MAX_TARGET_STEP = 5;//higher is faster
 angle = 45; oldAngle = 0;
+
+MAX_GUN_ANGLE = 85;
 
 interv1 = null;
 intervBeam = null;
@@ -201,19 +209,25 @@ heartsCount = 10;
 points = null; //eleme
 pointsCount = 0;
 
-
+svgGun = null;
+svgBeam = null;
+svgBeamOuter = null;
 is_fired = false;
 
 outerX = 700;
 outerY = 700;//todo: make as board size
 
 sizes = []; //img_sizes
+sincoses = [];
+sincoses1 = [];//real
+
+beamObj = {};
 
 window.onload = function(){
 
 window.addEventListener("keydown", function(ev){
 //todo make like keypress but for arrow btns
-    console.log(ev);
+    //console.log(ev);
     switch(ev.keyCode){
         case 32:
             //console.log("SPACE");
@@ -249,21 +263,26 @@ points = document.querySelector("#points");
 
 banner = document.querySelector("#banner");
 
-//test
-var testy = 3;
-var testx = getXFromY(testy);
-console.log("testx from y "+testy+" :" + testx);
+svgGun = document.querySelector("#line1");
+svgBeam = document.querySelector("#line2");
+svgBeamOuter = document.querySelector("#svgBeam");
 
-for(var i=0; i<90; i++){
-    sizes.push(getWidthHeight(i, GUN_SIZE));
+//test
+//var testy = 3;
+//var testx = getXFromY(testy);
+//console.log("testx from y "+testy+" :" + testx);
+
+for(var i=-90; i<90; i++){
+    sincoses.push(getXYSvg(i, GUN_SIZE, GUN_SIZE/2, GUN_SIZE));//getWidthHeight(i, GUN_SIZE));
+    sincoses1.push({x:Math.sin(i / 360 * Math.PI * 2), y:Math.cos(i / 360 * Math.PI * 2)});
 //console.log("i " + i + ": " + Math.sin(i / 360 * Math.PI * 2));
 }
 
 statusField = document.querySelector("#status");
 gunImg = document.querySelector("#gun_");
-beamImg = document.querySelector("#beam");
+//beamImg = document.querySelector("#beam");
 window_ = document.querySelector("#window");
-setImgSizes(gunImg, sizes[45]);
+//setImgSizes(gunImg, sizes[20]);
 
 
 var decr = document.querySelector("#decrease");
@@ -286,8 +305,10 @@ fireBtn.addEventListener("click", function(){
 //auto update the angle status field
 setInterval(function(){statusField.value = angle;}, 100);
 
+setGunPointPos(sincoses[angle+90].x, sincoses[angle+90].y);
+
 initTarget();
-initBeam(beamImg, angle);
+initSvgBeam(angle);
 
 hearts = document.querySelector("#hearts");
 for(var i=0; i<heartsCount; i++){
@@ -299,29 +320,26 @@ for(var i=0; i<heartsCount; i++){
 function fireHit(){
     if(is_fired){ return }
 
-    initBeam(beamImg, angle);
-    shoot(beamImg, angle);
+    initSvgBeam(angle);
+    shoot(angle);
     is_fired = true;
 
     disableButton(fireBtn);
 }
 
 /*pass 1 or -1*/
+/*for buttons pushed, start moving gun by interval*/
 function triggerGunMove(step){
     interv1 = setInterval(
     function(){
         oldAngle = angle; //Note A: save old to compare in order to know when to switch image file
         angle += parseInt(step);
-        //console.log(angle);
-        var wh = sizes[angle]; //getWidthHeight(angle, GUN_SIZE);
-        //console.log(wh);
-        setImgSizes(gunImg, wh);
-        var switchCheck = checkIfThinSwitch(angle, oldAngle);
-        if(switchCheck == -2) setImgSrc(gunImg, "line10.png");
-        else if(switchCheck == -1) setImgSrc(gunImg, "line22_5.png");
-        else if(switchCheck == 0) setImgSrc(gunImg, "line45.png");
-        else if(switchCheck == 1) setImgSrc(gunImg, "line67_5.png");
-        else if(switchCheck == 2) setImgSrc(gunImg, "line80.png");
+
+        if(angle >= MAX_GUN_ANGLE) angle = MAX_GUN_ANGLE-1;
+        if(angle <= - MAX_GUN_ANGLE) angle = -(MAX_GUN_ANGLE)+1;
+
+        setGunPointPos(sincoses[angle+90].x, sincoses[angle+90].y);
+
     }, 100);
 }
 /*When button is released*/
@@ -332,16 +350,17 @@ function abortGunMove(){
 function moveGun(step){
         oldAngle = angle; //Note A: save old to compare in order to know when to switch image file
         angle += parseInt(step);
-        //console.log(angle);
-        var wh = sizes[angle]; //getWidthHeight(angle, GUN_SIZE);
-        //console.log(wh);
-        setImgSizes(gunImg, wh);
-        var switchCheck = checkIfThinSwitch(angle, oldAngle);
-        if(switchCheck == -2) setImgSrc(gunImg, "line10.png");
-        else if(switchCheck == -1) setImgSrc(gunImg, "line22_5.png");
-        else if(switchCheck == 0) setImgSrc(gunImg, "line45.png");
-        else if(switchCheck == 1) setImgSrc(gunImg, "line67_5.png");
-        else if(switchCheck == 2) setImgSrc(gunImg, "line80.png");
+        if(angle >= MAX_GUN_ANGLE) angle = MAX_GUN_ANGLE-1;
+        if(angle <= - MAX_GUN_ANGLE) angle = -(MAX_GUN_ANGLE)+1;
+
+        setGunPointPos(sincoses[angle+90].x, sincoses[angle+90].y);
+        //var _x2, _y2;
+
+        //_x2 = sincoses1[angle+90].x * BEAM_SIZE;
+        //_y2 = sincoses1[angle+90].y * -BEAM_SIZE + 100;
+
+        //var wh = sizes[angle]; //getWidthHeight(angle, GUN_SIZE);
+
 }
 
 function getWidthHeight(ang, factor){
@@ -350,6 +369,15 @@ function getWidthHeight(ang, factor){
     var ret = {};
     ret.width = sinus * factor;
     ret.height = cosinus * factor;
+    return ret;
+}
+
+function getXYSvg(ang, size, xoffset, yoffset){
+    var x = calcSvgGunXPos(ang, size, xoffset);
+    var y = calcSvgGunYPos(ang, size, yoffset)
+    var ret = {};
+    ret.x = x;
+    ret.y = y;
     return ret;
 }
 
@@ -377,28 +405,35 @@ function initBeam(beamImg_, angle_){
     beamImg_.style.bottom = wh.height + "px";//setting pos
     beamImg_.style.visibility = "hidden";
     is_fired = false;
-    
-    
-    if(angle_ < 11){
-        beamImg_.src = "line10b.png";
-    }
-    else if(angle_ < 15){
-        console.log("line10b.png");
-        beamImg_.src = "line10b.png";
-        console.log(beamImg_.src);
-    }
-    else if(angle_ < 25){
-        beamImg_.src = "line22_5b.png";
-    }
-    else if(angle_ > 79){
-        beamImg_.src = "line80b.png";
-    }
-    else if(angle_ > 65){
-        beamImg_.src = "line67_5b.png";
+
+    drawPoints();//test
+    enableButton(fireBtn);
+}
+
+function initSvgBeam(angle_){
+    var xy = getXYSvg(angle_, BEAM_SIZE*2, 0, BEAM_SIZE);
+    var beamPos = getXYSvg(angle_, GUN_SIZE, 0, GUN_SIZE);
+
+/*GUN_X_OFFSET = 350;
+SVG_GUN_WIDTH = 100;*/
+
+    svgBeamOuter.style.width = BEAM_SIZE + "px";
+    svgBeamOuter.style.height = BEAM_SIZE + "px";
+    svgBeamOuter.style.border = "0 solid gray";
+    svgBeamOuter.style.visibility = "hidden";
+    //svgBeamOuter.style.background = "#ccc";
+    if(angle_ >= 0){
+        svgBeamOuter.style.left = GUN_X_OFFSET + beamPos.x + "px";
+        setBeamPointPos(xy.x, xy.y, true);
     }
     else{
-        beamImg_.src = "line45b.png";
+        svgBeamOuter.style.left = GUN_X_OFFSET - BEAM_SIZE + beamPos.x + "px";
+        setBeamPointPos(xy.x, xy.y, false);
     }
+    svgBeamOuter.style.bottom = SVG_GUN_WIDTH - beamPos.y + "px";
+
+
+    is_fired = false;
 
     drawPoints();//test
     enableButton(fireBtn);
@@ -411,28 +446,40 @@ function drawPoints(){
     points.appendChild(h3);
 }
 
-function shoot(beamImg_, angle_){
+function shoot(angle_){
     console.log("shoot angle " + angle_);
+/*
     var wh2 = getWidthHeight(angle_, BEAM_SIZE);
     var width = wh2.width;
     beamImg_.style.width = width + "px";
     var height = wh2.height;
     beamImg_.style.height = height + "px";
     beamImg_.style.visibility = "visible";//todo:hide when needed
+*/
+    //initSvgBeam(angle_);
+    svgBeamOuter.style.visibility = "visible";
+
+    var x = sincoses1[angle_+90].x;
+    var y = sincoses1[angle_+90].y;
+    //console.log("got x: " + x);
+    x *= BEAM_SIZE;
+    y *= BEAM_SIZE;
+
     var tan = Math.tan(angle_ * Math.PI/180);
     fx = 1 / tan; //what could be used in a formula f(x), y as function of x
-    console.log("fx is set to " + fx);
-    console.log("Tan is " + tan + " fx? " + fx);
+    //console.log("fx is set to " + fx);
+    //console.log("Tan is " + tan + " fx? " + fx);
     intervBeam = setInterval(function(){
-        moveBeam(beamImg_, width, height);        
+        moveSvgBeam(x, y);        
     }, intervBeam_);//extract
+    is_fired = true;//todo: depend on pos of beam
 }
 
 function moveBeam(beamImg_, stepX, stepY){
     stepX *= .9;
     stepY *= .9;//test to make path covered
 
-    var px = parseInt(beamImg.style.left);
+    var px = parseInt(beamImg.style.left);//removing the "px" or similar from css
     var py = parseInt(beamImg.style.bottom);
     px += parseInt(stepX);
     py += parseInt(stepY);//pos x y
@@ -442,6 +489,37 @@ function moveBeam(beamImg_, stepX, stepY){
     if(px > outerX || py > outerY){
         cancelBeam();
         initBeam(beamImg, angle);
+        is_fired = false;
+    }
+}
+
+function moveSvgBeam(x, y){
+    //console.log("moveSvgBeam med x y: " + x + " " + y + " isFired: " + is_fired);
+    x *= .9;
+    y *= .9;//test to make path covered
+
+    var px = parseInt(svgBeamOuter.style.left);//removing the "px" or similar from css
+    var py = parseInt(svgBeamOuter.style.bottom);
+    px += parseInt(x);
+    py += parseInt(y);//pos x y
+    //console.log("new x: " + px);
+    svgBeamOuter.style.left = px + "px";
+    svgBeamOuter.style.bottom = py + "px";
+    //console.log(px);
+
+    var baseX = 0;
+    if(x<0){
+        baseX = px + BEAM_SIZE;
+    }
+    else{
+        baseX = px;
+    }
+    //console.log("baseX " + baseX);    
+
+    if(baseX > outerX || baseX < 0 || py > outerY){
+        cancelBeam();
+        //initBeam(beamImg, angle);
+        initSvgBeam(angle);
         is_fired = false;
     }
 }
@@ -464,8 +542,8 @@ function initTarget(){
     //console.log("window_ bottom set to " + y + ", " + window_.style.bottom);
     var rand2 = Math.random();
     var diff2 = maxLen - minLen;
-    var len = rand2*diff2+minLen;
-    window_.style.width = parseInt(len) + "px";
+    var len = parseInt(rand2*diff2+minLen);//target width
+    window_.style.width = len + "px";
     window_.style.visibility = "visible";
     window_.className = "";
 
@@ -478,11 +556,11 @@ function initTarget(){
 
         //collision check
         //1. is beam in same x
-        var beamL = getBeamLeft();
-        var beamR = getBeamRight();
-        var beamBottom = getBeamBottom();
-        var beamTop = getBeamTop();
-        if(posx < parseInt(len)*-1){
+        var beamL = getElemLeft(svgBeamOuter);
+        var beamR = getElemRight(svgBeamOuter);
+        var beamBottom = getElemBottom(svgBeamOuter);
+        var beamTop = getElemTop(svgBeamOuter);
+        if(posx < parseInt(len)*-1){//has passed over screen
             console.log("<0");
             clearInterval(intervTarget);
             initTarget();
@@ -494,17 +572,17 @@ function initTarget(){
             }
             //setTimeout(function(){}, 300);            
         }
-        if(AOverlapsB(beamL, beamR, posx, posx+width)){
+        if(AOverlapsB(beamL, beamR, posx, posx+width) && is_fired){
             //2. get x for y (window)
-            var x = getXFromY(posy); //x for y the height of the window
+            var x = getXFromY(posy, GUN_X_OFFSET); //x for y the height of the window
             //is x inbetween window x1, x2
             if(x >= posx && x <= posx+width){
                 //console.log("Crossing path x:" + x + ", posx1:" + posx + "posx2: " + (posx+width));
                 if(beamBottom < posy && beamTop > posy){
-                    console.log("Hit x:" + x + ", posx1:" + posx + "posx2: " + (posx+width));
-                    pointsCount += parseInt(posy*targetStep)+angle; //height of target, speed of it, angle of gun
+                    console.log("Hit x:" + x + ", posx1:" + posx + ", posx2: " + (posx+width));
+                    pointsCount += parseInt(posy*targetStep)+len+Math.abs(angle); //height of target, speed of it, angle of gun
                     cancelBeam();
-                    initBeam(beamImg, angle);
+                    initSvgBeam(angle);
                     window_.className += " blow";
                     clearInterval(intervTarget);//moved from timeOuted function below because of error if shooting again after hit
                     if(targetStep <= MAX_TARGET_STEP){ increaseTargetSpeed() }
@@ -520,24 +598,24 @@ function initTarget(){
                 }
             }
             else{
-                console.log("Miss x:" + x + ", posx1:" + posx + "posx2: " + (posx+width));
+                //console.log("Miss x:" + x + ", posx1:" + posx + "posx2: " + (posx+width));
             }
         } 
     }, intervWindow_);   
 }
 
 function increaseTargetSpeed(){
-    targetStep += 0.5;
+    targetStep += 0.5; //it should then be rounded to integer
 }
 
-function getBeamBottom(){
-    var py = parseInt(beamImg.style.bottom);
+function getElemBottom(elem){
+    var py = parseInt(elem.style.bottom);
     return py;
 }
 
-function getBeamTop(){
-    var py = parseInt(beamImg.style.bottom);
-    var height = parseInt(beamImg.style.height);
+function getElemTop(elem){
+    var py = parseInt(elem.style.bottom);
+    var height = parseInt(elem.style.height);
     return py + height;
 }
 
@@ -545,22 +623,33 @@ function getFx(x){
     return x * fx;
 }
 
-function getXFromY(y){
-    console.log("getXFromY " + y + " and fx is " + fx);
-    return y / fx;
+function getXFromY(y, xOffset){
+    if(typeof xOffset == "undefined") xOffset = 0;
+    //console.log("getXFromY " + y + " and fx is " + fx);
+    return y / fx + xOffset;
 }
 
-function getBeamLeft(){
-    var px = parseInt(beamImg.style.left);
+function getElemLeft(elem){
+    var px = parseInt(elem.style.left);
     return px;
 }
 
-function getBeamRight(){
-    var px = parseInt(beamImg.style.left);
-    var width = parseInt(beamImg.style.width);
+function getSvgBeamLeft(){
+    var px = parseInt(svgBeamOuter.style.left);
+    return px;
+}
+
+function getElemRight(elem){
+    var px = parseInt(elem.style.left);
+    var width = parseInt(elem.style.width);
     return px+width;
 }
 
+function getSvgBeamRight(){
+    var px = parseInt(svgBeamOuter.style.left);
+    var width = parseInt(svgBeamOuter.style.width);
+    return px+width;
+}
 
 function AOverlapsB(aMin, aMax, bMin, bMax){
     if(aMin > aMax || bMin > bMax) return false;
@@ -599,6 +688,36 @@ function disableButton(elem){
 }
 function enableButton(elem){
     elem.disabled = false;
+}
+
+/*for x2, y2    */
+function setGunPointPos(x, y){
+    //console.log("sGPP " + x + "," + y);
+    //console.log(svgGun);
+    svgGun.x2.baseVal.value = x;
+    svgGun.y2.baseVal.value = y;
+}
+
+function setBeamPointPos(x, y, positiveAngle){
+    if(positiveAngle){
+        svgBeam.x2.baseVal.value = x;
+        //base
+        svgBeam.x1.baseVal.value = 0;
+    }
+    else{
+        svgBeam.x2.baseVal.value = x+BEAM_SIZE;
+        //base
+        svgBeam.x1.baseVal.value = BEAM_SIZE;
+    }
+    svgBeam.y2.baseVal.value = y;
+    svgBeam.y1.baseVal.value = BEAM_SIZE;
+}
+
+function calcSvgGunXPos(angle_, size, offset){
+    return Math.sin(angle_ / 360 * Math.PI * 2) * (size / 2) + offset;
+}
+function calcSvgGunYPos(angle_, size, offset){
+    return Math.cos(angle_ / 360 * Math.PI * 2) * (-size / 2) + offset;
 }
 </script>
 

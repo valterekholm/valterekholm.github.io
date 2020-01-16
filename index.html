@@ -190,6 +190,7 @@ SVG_GUN_WIDTH = 100;//ALSO HEIGHT
 WAIT_AFTER_HIT = 3000;
 minHitDecay = 1000;
 MAX_TARGET_STEP = 5;//higher is faster
+HEART_IMG = "heart_red_.png";
 angle = 1; oldAngle = 0;
 
 MAX_GUN_ANGLE = 85;
@@ -692,7 +693,7 @@ function makeBreak(){
 
 function drawOneHeart(){
     var newHeart = document.createElement("img");
-    newHeart.src = "heart.png";
+    newHeart.src = HEART_IMG;
     hearts.appendChild(newHeart);
 }
 

@@ -810,6 +810,7 @@ function AOverlapsB(aMin, aMax, bMin, bMax){
 }
 
 function messageBanner(html){
+    banner.innerHTML = "";
     banner.className="showing";
     setTimeout(function(){banner.innerHTML = html}, 500);
     setTimeout(function(){banner.className = ""}, 3500);

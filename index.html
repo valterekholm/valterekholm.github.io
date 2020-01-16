@@ -2,15 +2,18 @@
 <html>
 <head>
 <meta charset="utf-8">
-    <title>F(x) square_shooter v.2</title>
+<title>F(x) square_shooter v.2</title>
 <style>
 body{
 font-size:16px;
 margin: 0;
 }
-button, input[type="button"], input[type="number"]{
+button, input, input[type="button"], input[type="number"]{
 font-size:40px;
 width: 23%;
+}
+input[type="range"]{
+width:90%;
 }
 #decrease:before{
     content: "<--";
@@ -84,10 +87,6 @@ height:30px;
 font-size: 1.1em;
 }
 
-#console{
-background: #ccc;
-}
-
 .holder{
 background: white;
 text-align: center;
@@ -129,9 +128,6 @@ width: 80%;
 padding: 15px;
 }
 
-#hearts img{
-margin: 4px;
-}
 #points{
 text-align: center;
 }
@@ -166,8 +162,9 @@ text-align: center;
 
 <div class="holder">
 
-<button id="decrease"></button>
-<button id="increase"></button>
+<!--button id="decrease"></button>
+<button id="increase"></button-->
+<input type="range" id="aimer" min="-90" max="90">
 <input id="status" type="number" readonly>
 <input type="button" id="fire" value="Fire">
 </div>
@@ -176,8 +173,6 @@ text-align: center;
 </div>
 
 <div class="holder" id="points"></div>
-<div id="console">
-</div>
 
 <script>
 /*Gun movement must be max one degree at a time, se note A*/
@@ -237,9 +232,6 @@ window.onload = function(){
 window.addEventListener("keydown", function(ev){
 //todo make like keypress but for arrow btns
     //console.log(ev);
-document.querySelector("#console").innerHTML =
-ev.keyCode;
-
     switch(ev.keyCode){
         case 32:
             //console.log("SPACE");
@@ -299,13 +291,20 @@ window_ = document.querySelector("#window");
 
 var decr = document.querySelector("#decrease");
 var incr = document.querySelector("#increase");
+var aimer = document.querySelector("#aimer");
 fireBtn = document.querySelector("#fire");
-
+/*
 decr.addEventListener("mousedown", function(){console.log("decrease down"); triggerGunMove(-1)});
 decr.addEventListener("mouseup", function(){console.log("decrease up"); abortGunMove()});
 
 incr.addEventListener("mousedown", function(){console.log("increase down"); triggerGunMove(+1)});
 incr.addEventListener("mouseup", function(){console.log("increase up"); abortGunMove()});
+*/
+aimer.addEventListener("input", function(){
+console.log("aimer at " + this.value);
+angle=parseInt(this.value);
+setGunPointPos(sincoses[angle+90].x, sincoses[angle+90].y);
+});
 
 fireBtn.addEventListener("click", function(){
     fireHit();

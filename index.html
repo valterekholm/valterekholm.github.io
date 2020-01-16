@@ -8,6 +8,9 @@ body{
 font-size:16px;
 margin: 0;
 }
+* {
+  box-sizing: border-box;
+}
 button, input, input[type="button"], input[type="number"]{
 font-size:40px;
 width: 23%;
@@ -343,7 +346,7 @@ window.onload = function(){
 
 window.addEventListener("keydown", function(ev){
 //todo make like keypress but for arrow btns
-    //console.log(ev);
+    console.log(ev);
     switch(ev.keyCode){
         case 32:
             //console.log("SPACE");
@@ -363,6 +366,11 @@ window.addEventListener("keydown", function(ev){
         case 73: //i
             increaseTargetSpeed();
         break;
+        case 83: //s
+            var type = sound1.volume==1.0 ? "off" : "on";
+            sound1.volume = sound1.volume==1.0 ? 0.0 : 1.0;
+            messageBanner("<img src='sound_"+type+".png'>");
+        break;
     }
 });
 
@@ -370,7 +378,7 @@ window.addEventListener("keydown", function(ev){
 info = document.querySelector("#info");
 
 info.addEventListener("click", function(){
-    messageBanner("<h1>Use arrows to aim, fire with space-bar.</h1>");
+    messageBanner("<h1>Use arrows to aim, fire with space-bar, 's' to toggle sound.</h1>");
 });
 
 info.className = "";//for animation (transition)

@@ -13,8 +13,101 @@ font-size:40px;
 width: 23%;
 }
 input[type="range"]{
-width:90%;
+width:80%;
+padding: 10px 0;
 }
+/*from https://www.cssportal.com/style-input-range/*/
+
+input[type=range] {
+  height: 38px;
+  -webkit-appearance: none;
+  margin: 8px 0;
+}
+input[type=range]:focus {
+  outline: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  height: 2px;
+  cursor: pointer;
+  animate: 0.2s;
+  box-shadow: 0 0 2px #000000;
+  background: #506070;
+  border-radius: 5px;
+  border: 1px solid #000000;
+}
+input[type=range]::-webkit-slider-thumb {
+  box-shadow: 1px 1px 3px #000000;
+  border: 2px solid #000000;
+  height: 30px;
+  width: 23px;
+  border-radius: 8px;
+  background: #FFFFFF;
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -11px;
+}
+input[type=range]:focus::-webkit-slider-runnable-track {
+  background: #506070;
+}
+input[type=range]::-moz-range-track {
+  width: 100%;
+  height: 2px;
+  cursor: pointer;
+  animate: 0.2s;
+  box-shadow: 0 0 2px #000000;
+  background: #506070;
+  border-radius: 5px;
+  border: 1px solid #000000;
+}
+input[type=range]::-moz-range-thumb {
+  box-shadow: 1px 1px 3px #000000;
+  border: 2px solid #000000;
+  height: 30px;
+  width: 23px;
+  border-radius: 8px;
+  background: #FFFFFF;
+  cursor: pointer;
+}
+input[type=range]::-ms-track {
+  height: 2px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+input[type=range]::-ms-fill-lower {
+  background: #3071A9;
+  border: 1px solid #000000;
+  border-radius: 10px;
+  box-shadow: 1px 1px 1px #000000;
+}
+input[type=range]::-ms-fill-upper {
+  background: #3071A9;
+  border: 1px solid #000000;
+  border-radius: 10px;
+  box-shadow: 1px 1px 1px #000000;
+}
+input[type=range]::-ms-thumb {
+  margin-top: 1px;
+  box-shadow: 1px 1px 3px #000000;
+  border: 2px solid #000000;
+  height: 30px;
+  width: 23px;
+  border-radius: 8px;
+  background: #FFFFFF;
+  cursor: pointer;
+}
+input[type=range]:focus::-ms-fill-lower {
+  background: #3071A9;
+}
+input[type=range]:focus::-ms-fill-upper {
+  background: #3071A9;
+}
+
+/*end range css*/
+
+
 #decrease:before{
     content: "<--";
 }
@@ -85,6 +178,10 @@ font-size: 1em;
 width:30px;
 height:30px;
 font-size: 1.1em;
+}
+
+#status{
+padding: 4px;
 }
 
 .holder{
@@ -172,7 +269,9 @@ text-align: center;
 <!--button id="decrease"></button>
 <button id="increase"></button-->
 <input type="range" id="aimer" min="-90" max="90">
-<input id="status" type="number" readonly>
+</div>
+<div class="holder">
+<input id="status" readonly>
 <input type="button" id="fire" value="Fire">
 </div>
 
@@ -190,7 +289,6 @@ SVG_GUN_WIDTH = 100;//ALSO HEIGHT
 WAIT_AFTER_HIT = 3000;
 minHitDecay = 1000;
 MAX_TARGET_STEP = 5;//higher is faster
-HEART_IMG = "heart_red_.png";
 angle = 1; oldAngle = 0;
 
 MAX_GUN_ANGLE = 85;
@@ -236,6 +334,12 @@ sincoses1 = [];//real
 beamObj = {};
 
 window.onload = function(){
+/*sound*/
+        sound1 = document.createElement("audio");
+        sound1.src="button-6.mp3";
+        sound1.volume=1.0;
+        sound1.autoPlay=false;
+        sound1.preLoad=true;       
 
 window.addEventListener("keydown", function(ev){
 //todo make like keypress but for arrow btns
@@ -344,6 +448,7 @@ function fireHit(){
     is_fired = true;
 
     disableButton(fireBtn);
+    sound1.play();
 }
 
 /*pass 1 or -1*/
@@ -693,7 +798,7 @@ function makeBreak(){
 
 function drawOneHeart(){
     var newHeart = document.createElement("img");
-    newHeart.src = HEART_IMG;
+    newHeart.src = "heart.png";
     hearts.appendChild(newHeart);
 }
 

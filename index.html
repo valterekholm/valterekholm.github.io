@@ -14,6 +14,7 @@ margin: 0;
 button, input, input[type="button"], input[type="number"]{
 font-size:40px;
 width: 23%;
+vertical-align: middle;
 }
 input[type="range"]{
 width:80%;
@@ -168,14 +169,14 @@ transition: border 1s, opacity 2s, background-color 1s;
 position:absolute;
 top:0;
 right:0;
-width:20px;
-height:20px;
+width:40px;
+height:40px;
 background-color:green;
 border: 2px solid #4a5;
 text-align: center;
 cursor: pointer;
 transition: all 3s;
-font-size: 1em;
+font-size: 2em;
 }
 #info.bigger{
 width:30px;
@@ -239,6 +240,11 @@ margin:5px;
 text-align: center;
 }
 
+#soundBtn{
+height: 55px;
+vertical-align: middle;
+}
+
 @media only screen and (max-width: 600px) {
   #aimer {
     padding: 50px 0;
@@ -282,6 +288,7 @@ text-align: center;
 <div class="holder">
 <input id="status" readonly>
 <input type="button" id="fire" value="Fire">
+<img src="./sound_on.png" onclick="toggleSound(this)" id="soundBtn">
 </div>
 
 <div class="holder" id="hearts">
@@ -325,6 +332,9 @@ fx = 2;
 hearts = null; //eleme
 heartsCount = 10;
 
+soundOn = 0;
+soundBtn = null;
+
 points = null; //eleme
 pointsCount = 0;
 
@@ -350,6 +360,10 @@ window.onload = function(){
         sound1.autoPlay=false;
         sound1.preLoad=true;       
 
+
+soundOn = true;
+soundBtn = document.querySelector("#soundBtn");
+
 window.addEventListener("keydown", function(ev){
 //todo make like keypress but for arrow btns
     console.log(ev);
@@ -373,9 +387,7 @@ window.addEventListener("keydown", function(ev){
             increaseTargetSpeed();
         break;
         case 83: //s
-            var type = sound1.volume==1.0 ? "off" : "on";
-            sound1.volume = sound1.volume==1.0 ? 0.0 : 1.0;
-            messageBanner("<img src='sound_"+type+".png'>");
+            toggleSound(soundBtn);
         break;
     }
 });
@@ -856,6 +868,16 @@ function calcSvgGunXPos(angle_, size, offset){
 }
 function calcSvgGunYPos(angle_, size, offset){
     return Math.cos(angle_ / 360 * Math.PI * 2) * (-size / 2) + offset;
+}
+
+function toggleSound(imgElem){
+    console.log("toggleSound");
+    soundOn = !soundOn;
+
+    var fileName = soundOn ? "sound_on.png" : "sound_off.png";
+    
+    imgElem.src = fileName;
+    sound1.volume = sound1.volume==1.0 ? 0.0 : 1.0;
 }
 </script>
 

@@ -381,7 +381,7 @@ angle = 1; oldAngle = 0;
 
 INTERV_MOUSE_AIM = 40;
 
-BOARD_HEIGHT = 700;//px
+BOARD_HEIGHT = 700;//px, use as width also
 
 MAX_GUN_ANGLE = 85;
 
@@ -924,8 +924,8 @@ function initTarget(){
 		  T.posX -= parseInt(targetStep);
 		  }
         posx-=parseInt(targetStep); //moving
-		  //window_.style.left = T.posX + "px"; //posx + "px"; //todo extract function
-		  T.div.style.left = T.posX + "px";
+		//window_.style.left = T.posX + "px"; //posx + "px"; //todo extract function
+		T.div.style.left = T.posX + "px";
         var width = parseInt(window_.style.width);
 
         var posy = parseInt(window_.style.bottom);
@@ -941,7 +941,8 @@ function initTarget(){
         var beamR = getElemRight(svgBeamOuter);
         var beamBottom = getElemBottom(svgBeamOuter);
         var beamTop = getElemTop(svgBeamOuter);
-        if(posx < parseInt(len)*-1){//has passed over screen
+        if(T.dir == 'l'){
+        if(T.posX < parseInt(len)*-1){//has passed over screen
             console.log("<0");
             clearInterval(intervTarget);
             initTarget();
@@ -952,6 +953,21 @@ function initTarget(){
                 messageBanner("<h1>Game Over</h1>");
             }
             //setTimeout(function(){}, 300);            
+        }
+        }
+        else if(T.dir == 'r'){
+        if(T.posX > parseInt(BOARD_HEIGHT)){//has passed over screen
+            console.log(BOARD_HEIGHT);
+            clearInterval(intervTarget);
+            initTarget();
+            heartsCount--;
+            removeLastChild(hearts);
+            if(heartsCount==0){
+                makeBreak();
+                messageBanner("<h1>Game Over</h1>");
+            }
+            //setTimeout(function(){}, 300);            
+        }
         }
         if(AOverlapsB(beamL, beamR, posx, posx+width) && is_fired){
             //2. get x for y (window)

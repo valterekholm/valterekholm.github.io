@@ -130,6 +130,10 @@ background-position: 328px 680px;
 margin: 10px auto;
 overflow: hidden;
 }
+#board.aiming{
+cursor: crosshair;
+}
+
 #gun{
 position: absolute;
 left: 350px;
@@ -179,9 +183,9 @@ transition: all 3s;
 font-size: 2em;
 }
 #info.bigger{
-width:30px;
-height:30px;
-font-size: 1.1em;
+width:50px;
+height:50px;
+font-size: 2.1em;
 }
 
 #status{
@@ -226,14 +230,25 @@ width: 80%;
 }
 
 #hearts{
-padding: 15px;
+padding: 1px;
 position: fixed;
-top: 10px;
+top: 0;
 left: 10px;
 background: transparent;
+width:50%;
 }
 #hearts img{
 margin:5px;
+}
+
+#hearts div{
+margin:5px;
+display: inline-block;
+}
+
+.heartSVG{
+    fill: red !important;
+    stroke: black !important;
 }
 
 #points{
@@ -245,28 +260,42 @@ height: 55px;
 vertical-align: middle;
 }
 
+#statsArea{
+width: 100%;
+/*overflow: scroll;*/
+word-break: break-word;
+}
+
+#statsArea span{
+margin-right: 10px;
+}
+
+#statsArea div{
+border-width: 1px 1px 1px 0;
+border-style: solid;
+display: inline-block;
+}
+
 @media only screen and (min-width: 992px) {
-  #aimer {
-    padding: 10px 0;
-  }
-input[type=range]::-ms-thumb {
-height: 30px;
-width: 23px;
-border-radius: 8px;
-}
-input[type=range]::-moz-range-thumb {
-height: 30px;
-width: 23px;
-border-radius: 8px;
-}
+    #aimer {
+        padding: 10px 0;
+    }
+    input[type=range]::-ms-thumb {
+        height: 30px;
+        width: 23px;
+        border-radius: 8px;
+    }
+    input[type=range]::-moz-range-thumb {
+        height: 30px;
+        width: 23px;
+        border-radius: 8px;
+    }
 
-input[type=range]::-webkit-slider-thumb {
-height: 30px;
-width: 23px;
-border-radius: 8px;
-}
-
-
+    input[type=range]::-webkit-slider-thumb {
+        height: 30px;
+        width: 23px;
+        border-radius: 8px;
+    }
 }
 
 </style>
@@ -301,7 +330,7 @@ border-radius: 8px;
 
 <!--button id="decrease"></button>
 <button id="increase"></button-->
-<input type="range" id="aimer" min="-90" max="90">
+<input type="range" id="aimer" min="-90" max="89">
 </div>
 <div class="holder">
 <input id="status" readonly>
@@ -314,6 +343,31 @@ border-radius: 8px;
 
 <div class="holder" id="points"></div>
 
+<div class="holder" id="statsArea"></div>
+
+<!--
+<svg width="33mm" height="23.67mm" version="1.1" viewBox="0 0 33 23.67" xmlns="http://www.w3.org/2000/svg">
+ <g transform="translate(0,-273.33)">
+  <path d="m16.5 296.36s15.964-10.643 15.964-17.561c-2e-6 -5.3215-7.9822-7.7162-15.964 0-7.9822-7.7162-15.964-5.3215-15.964 0 1e-7 6.918 15.964 17.561 15.964 17.561z" style="fill:#d68d00;stroke-opacity:.6338;stroke-width:1.071;stroke:#72be7d"/>
+ </g>
+</svg>
+-->
+<!--
+<svg width="36.7mm" height="28mm" version="1.1" viewBox="0 0 36.7 28" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+  <pattern id="pattern2591" patternTransform="matrix(10 0 0 10 106.93 163.56)" xlink:href="#Packedcircles"/>
+  <pattern id="Packedcircles" width="1" height="1.73205080756" patternTransform="translate(0) scale(10)" patternUnits="userSpaceOnUse">
+   <circle cy=".5" r=".5"/>
+   <circle cx="1" cy=".5" r=".5"/>
+   <circle cx=".5" cy="1.366" r=".5"/>
+   <circle cx=".5" cy="-.36603" r=".5"/>
+  </pattern>
+ </defs>
+ <g transform="translate(0,-269)">
+  <path d="m18.294 293.88s15.875-10.583 15.875-17.462c0-5.2916-7.9375-7.6729-15.875 0-7.9375-7.6729-15.875-5.2916-15.875 0 0 6.8792 15.875 17.462 15.875 17.462z" style="fill:#ff422a;stroke-width:4.865;stroke:url(#pattern2591)"/>
+ </g>
+</svg>
+-->
 <script>
 /*Gun movement must be max one degree at a time, se note A*/
 GUN_SIZE = 100;
@@ -322,20 +376,35 @@ GUN_X_OFFSET = 350;
 SVG_GUN_WIDTH = 100;//ALSO HEIGHT
 WAIT_AFTER_HIT = 3000;
 minHitDecay = 1000;
-MAX_TARGET_STEP = 5;//higher is faster
+MAX_TARGET_STEP = 4//5;//higher is faster
 angle = 1; oldAngle = 0;
+
+INTERV_MOUSE_AIM = 40;
+
+BOARD_HEIGHT = 700;//px
 
 MAX_GUN_ANGLE = 85;
 
-interv1 = null;
+moveGunInterv = null;
 intervBeam = null;
 intervTarget = null;
+intervAim = null; //for click on area
 
-interv1_copy = null;
+
+//heartImg = "hearts_dots_.svg"; //"heart.svg"; //replaced by inline svg
+mouseDownTicks = 0; //counter increasing only if mouse is down
+
+moveGunInterv_copy = null;
 intervBeam_copy = null;
 intervTarget_copy = null;
 
-intervBeam_ = 80;
+targTimeout = null;
+
+var targetLowest = 170;//hight from "ground"
+var minLen = 100, maxLen=200; //target length limits
+
+
+intervBeam_ = 40;//80;
 targetStep = 1;
 intervWindow_ = 20;
 statusField = null;
@@ -345,7 +414,24 @@ beamImg = null;
 window_ = null;//target
 info = null;
 banner = null;//banner for info
+board = null; //play board
 fx = 2;
+
+windowPos = {}; //for stats
+
+mousePos = {}; //with x y relative to board, and lastMoveTick, used for mouse down
+
+mousePos.lastMoveTick = -1;
+
+windowPos.getCenterXY = function(){
+
+    console.log(this);//return center of square in x,y
+    var coord = {};
+    coord.x = (this.x1 + this.x2) / 2;
+    coord.y = (this.y1 + this.y2) / 2;
+    return coord;
+
+}
 
 hearts = null; //eleme
 heartsCount = 10;
@@ -370,7 +456,60 @@ sincoses1 = [];//real
 
 beamObj = {};
 
+saveStats = true;//to trace a fault with beam crossing the target
+stats = [];
+
+//todo: use obj for target(s):
+
+var T = {};
+T.dir = 'l'; //direction, l or r
+T.speed = 50; //50 is normal
+T.altitude = 400; //px up in the air
+T.len = 100; //px of length
+T.posX = 100; //from left in px
+T.div = document.querySelector("#window");//Todo: make array of targets, initially one
+
 window.onload = function(){
+
+board = document.querySelector("#board");
+/*board.addEventListener("click", function(ev){
+
+    console.log(ev);
+
+});*/
+
+board.addEventListener("mousedown", function(ev){
+
+    console.log(ev);
+    mousePos.x = ev.layerX;
+    mousePos.y = ev.layerY;
+    mouseDown();//using global var
+
+});
+
+board.addEventListener("mouseup", function(ev){
+
+    console.log(ev);
+    mouseUp(true);
+
+});
+/* did not work
+board.addEventListener("mousemove", function(ev){
+    console.log(ev);
+
+    //mouseDownTicks
+    //mousePos.lastMoveTick
+    if(mousePos.lastMoveTick != mouseDownTicks){
+        mousePos.x = ev.layerX;
+        mousePos.y = ev.layerY;
+        console.log("move " + mousePos.x + ", " + mousePos.y);
+        mouseUp(false);//test
+        mouseDown();//test
+        mousePos.lastMoveTick = mouseDownTicks;
+    }
+});
+*/
+
 /*sound*/
         sound1 = document.createElement("audio");
         sound1.src="button-6.mp3";
@@ -400,6 +539,10 @@ window.addEventListener("keydown", function(ev){
         break;
         case 65: //a
             makeBreak();
+            if(saveStats){
+                presentStats();
+            }
+            saveStats = false;//prevent double statsGraphs
         break;
         case 73: //i
             increaseTargetSpeed();
@@ -438,9 +581,12 @@ for(var i=-90; i<90; i++){
 //console.log("i " + i + ": " + Math.sin(i / 360 * Math.PI * 2));
 }
 
+console.log(sincoses1);
+
 statusField = document.querySelector("#status");
 gunImg = document.querySelector("#gun_");
 //beamImg = document.querySelector("#beam");
+
 window_ = document.querySelector("#window");
 //setImgSizes(gunImg, sizes[20]);
 
@@ -479,7 +625,7 @@ initSvgBeam(angle);
 
 hearts = document.querySelector("#hearts");
 for(var i=0; i<heartsCount; i++){
-    drawOneHeart();
+    drawOneHeart("heart_"+i);
     }
 
 }
@@ -498,7 +644,7 @@ function fireHit(){
 /*pass 1 or -1*/
 /*for buttons pushed, start moving gun by interval*/
 function triggerGunMove(step){
-    interv1 = setInterval(
+    moveGunInterv = setInterval(
     function(){
         oldAngle = angle; //Note A: save old to compare in order to know when to switch image file
         angle += parseInt(step);
@@ -512,7 +658,7 @@ function triggerGunMove(step){
 }
 /*When button is released*/
 function abortGunMove(){
-    clearInterval(interv1);
+    clearInterval(moveGunInterv);
 }
 
 function moveGun(step){
@@ -528,7 +674,15 @@ function moveGun(step){
         //_y2 = sincoses1[angle+90].y * -BEAM_SIZE + 100;
 
         //var wh = sizes[angle]; //getWidthHeight(angle, GUN_SIZE);
+}
 
+function setGunAngle(ang){
+        oldAngle = angle; //Note A: save old to compare in order to know when to switch image file
+        angle = ang;
+        if(angle >= MAX_GUN_ANGLE) angle = MAX_GUN_ANGLE-1;
+        if(angle <= - MAX_GUN_ANGLE) angle = -(MAX_GUN_ANGLE)+1;
+
+        setGunPointPos(sincoses[angle+90].x, sincoses[angle+90].y);
 }
 
 function getWidthHeight(ang, factor){
@@ -642,7 +796,7 @@ function shoot(angle_){
     }, intervBeam_);//extract
     is_fired = true;//todo: depend on pos of beam
 }
-
+/*
 function moveBeam(beamImg_, stepX, stepY){
     stepX *= .9;
     stepY *= .9;//test to make path covered
@@ -660,23 +814,40 @@ function moveBeam(beamImg_, stepX, stepY){
         is_fired = false;
     }
 }
+*/
 
 function moveSvgBeam(x, y){
     //console.log("moveSvgBeam med x y: " + x + " " + y + " isFired: " + is_fired);
+
     x *= .9;
     y *= .9;//test to make path covered
 
     var px = parseInt(svgBeamOuter.style.left);//removing the "px" or similar from css
     var py = parseInt(svgBeamOuter.style.bottom);
+
+    if(saveStats && is_fired){
+        var middleX = (px + (px + parseInt(x))) / 2;
+        var middleY = (py + (py + parseInt(y))) / 2;
+
+        var wp = windowPos.getCenterXY();
+        //saving distance between beam and target
+        stats.push(getDist(middleX,middleY,wp.x,wp.y));
+    }
+
     px += parseInt(x);
     py += parseInt(y);//pos x y
+
+
+
+
+
     //console.log("new x: " + px);
     svgBeamOuter.style.left = px + "px";
     svgBeamOuter.style.bottom = py + "px";
     //console.log(px);
 
     var baseX = 0;
-    if(x<0){
+    if(x>0){//if shooting left TODO: try invert case
         baseX = px + BEAM_SIZE;
     }
     else{
@@ -694,18 +865,22 @@ function moveSvgBeam(x, y){
 
 function cancelBeam(){
     clearInterval(intervBeam);
+    is_fired = false;
 }
 
 function initTarget(){
-    var targetHighest = 600;
-    var targetLowest = 170;//hight from "ground"
+    var targetHighest = BOARD_HEIGHT - 100; //600;
+    //targetLowest = 170;//hight from "ground"
 
-    var minLen = 100, maxLen=200;
+    //window_ is target - like a window for the beam to pass through
 
     window_.style.left = outerX + "px";
     var rand = Math.random();
     var diff = targetHighest - targetLowest;
     var y = rand*diff+targetLowest;
+
+
+
     window_.style.bottom = parseInt(y)+"px";
     //console.log("window_ bottom set to " + y + ", " + window_.style.bottom);
     var rand2 = Math.random();
@@ -715,12 +890,50 @@ function initTarget(){
     window_.style.visibility = "visible";
     window_.className = "";
 
+    //for direction l/r
+
+    if(parseInt(y) % 2 == 0){ T.dir = 'l'; }
+    else{ T.dir = 'r'; }
+    T.altitude = y;
+    T.width = len;
+
+    if(T.dir == 'r'){
+        T.posX = len*-1;//out left
+    }
+    else{
+        T.posX = outerX;//out right
+    }
+
+		  //moving
     intervTarget = setInterval(function(){
+
         var posx = parseInt(window_.style.left);
-        posx-=parseInt(targetStep);
-        window_.style.left = posx + "px";
+
+
+        if(saveStats){
+            windowPos.x1 = posx;
+            windowPos.x2 = posx + len;
+        }
+
+
+
+		  if(T.dir == 'r'){
+		  T.posX += parseInt(targetStep);
+		  }
+		  else{
+		  T.posX -= parseInt(targetStep);
+		  }
+        posx-=parseInt(targetStep); //moving
+		  //window_.style.left = T.posX + "px"; //posx + "px"; //todo extract function
+		  T.div.style.left = T.posX + "px";
         var width = parseInt(window_.style.width);
+
         var posy = parseInt(window_.style.bottom);
+
+        if(saveStats){
+            windowPos.y1 = posy;
+            windowPos.y2 = posy+1;//TODO: define height in variable
+        }
 
         //collision check
         //1. is beam in same x
@@ -755,11 +968,10 @@ function initTarget(){
                     clearInterval(intervTarget);//moved from timeOuted function below because of error if shooting again after hit
                     if(targetStep <= MAX_TARGET_STEP){ increaseTargetSpeed() }
                     
-                    setTimeout(
+                    targTimeout = setTimeout(
                         function(){
                             //clearInterval(intervTarget); //moved up
                             initTarget();
-                            is_fired = false;
                         }, WAIT_AFTER_HIT);
                     if(WAIT_AFTER_HIT > minHitDecay){ WAIT_AFTER_HIT-=100; }
                     fx = 0;
@@ -836,16 +1048,37 @@ function messageBanner(html){
 
 //brakes game
 function makeBreak(){
-    clearInterval(interv1);
-    clearInterval(intervBeam);
+    clearInterval(moveGunInterv);
     clearInterval(intervTarget);//todo: make startable
+    clearTimeout(targTimeout);
+    cancelBeam();
 }
 
-function drawOneHeart(){
+function drawOneHeart(id){
+    if(typeof id === "undefined"){ id = ""; }
     var newHeart = document.createElement("img");
-    newHeart.src = "heart.png";
-    hearts.appendChild(newHeart);
+    //newHeart.src = heartImg;
+    newHeart.id = id;
+    newHeart.className = "heart";
+    //hearts.appendChild(newHeart);
+    
+    newHeart.addEventListener("click", function(){
+        console.log(this);
+    });
+    
+    var div = document.createElement("div");
+    div.innerHTML = '<svg width="33mm" height="23.67mm" version="1.1" viewBox="0 0 33 23.67" xmlns="http://www.w3.org/2000/svg"><g transform="translate(0,-273.33)"><path d="m16.5 296.36s15.964-10.643 15.964-17.561c-2e-6 -5.3215-7.9822-7.7162-15.964 0-7.9822-7.7162-15.964-5.3215-15.964 0 1e-7 6.918 15.964 17.561 15.964 17.561z" style="fill:#d68d00;stroke-opacity:.6338;stroke-width:1.071;stroke:#72be7d" class="heartSVG" /></g></svg>';
+    /*<svg width="33mm" height="23.67mm" version="1.1" viewBox="0 0 33 23.67" xmlns="http://www.w3.org/2000/svg">
+ <g transform="translate(0,-273.33)">
+  <path d="m16.5 296.36s15.964-10.643 15.964-17.561c-2e-6 -5.3215-7.9822-7.7162-15.964 0-7.9822-7.7162-15.964-5.3215-15.964 0 1e-7 6.918 15.964 17.561 15.964 17.561z" style="fill:#d68d00;stroke-opacity:.6338;stroke-width:1.071;stroke:#72be7d"/>
+ </g>
+</svg>*/
+    div.innerHTML = '<svg width="36.7mm" height="28mm" version="1.1" viewBox="0 0 36.7 28" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><pattern id="pattern2591" patternTransform="matrix(10 0 0 10 106.93 163.56)" xlink:href="#Packedcircles"/><pattern id="Packedcircles" width="1" height="1.73205080756" patternTransform="translate(0) scale(10)" patternUnits="userSpaceOnUse"><circle cy=".5" r=".5"/><circle cx="1" cy=".5" r=".5"/><circle cx=".5" cy="1.366" r=".5"/><circle cx=".5" cy="-.36603" r=".5"/></pattern></defs><g transform="translate(0,-269)"><path d="m18.294 293.88s15.875-10.583 15.875-17.462c0-5.2916-7.9375-7.6729-15.875 0-7.9375-7.6729-15.875-5.2916-15.875 0 0 6.8792 15.875 17.462 15.875 17.462z" style="fill:#ff422a;stroke-width:4.865;stroke:url(#pattern2591)"/></g></svg>';
+
+    div.innerHTML = '<svg width="31.3mm" height="23.9mm" version="1.1" viewBox="0 0 31.3 23.9" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><pattern id="pattern2591" patternTransform="matrix(8.5036 0 0 8.5036 90.927 183.5)" xlink:href="#Packedcircles"/><pattern id="Packedcircles" width="1" height="1.73205080756" patternTransform="translate(0) scale(10)" patternUnits="userSpaceOnUse"><circle cy=".5" r=".5"/><circle cx="1" cy=".5" r=".5"/><circle cx=".5" cy="1.366" r=".5"/><circle cx=".5" cy="-.36603" r=".5"/></pattern></defs><g transform="translate(0,-273.1)"><path d="m15.555 294.31s13.499-8.9996 13.499-14.849c0-4.4998-6.7497-6.5247-13.499 0-6.7497-6.5247-13.499-4.4998-13.499 0 0 5.8498 13.499 14.849 13.499 14.849z" style="fill:#ff422a;stroke-width:4.137;stroke:url(#pattern2591)"/></g></svg>';
+    hearts.appendChild(div);
 }
+
 
 function removeLastChild(container){
     var lc = container.lastElementChild;
@@ -897,6 +1130,85 @@ function toggleSound(imgElem){
     
     imgElem.src = fileName;
     sound1.volume = sound1.volume==1.0 ? 0.0 : 1.0;
+}
+
+function getDist(x1, y1, x2, y2){
+
+    var distX = x1<x2 ? x2-x1 : x1-x2;
+    var distY = y1<y2 ? y2-y1 : y1-y2;
+
+    var dist = Math.sqrt(distX + distY);
+    return dist;
+}
+
+function presentStats(){
+    var statsArea = document.querySelector("#statsArea");
+    var len = stats.length;
+    for(var i=0; i<len; i++){
+        /*var span = document.createElement("span");
+        span.innerHTML = stats[i];
+        statsArea.appendChild(span);*/
+        var div = document.createElement("div");
+        div.style.width = "10px";
+        div.style.height = parseInt(stats[i]) + "px";
+        statsArea.appendChild(div);
+    }
+}
+
+function mouseDown(){
+    board.className = "aiming";
+    var mouseAng = getCrosshairAngle(mousePos.x, mousePos.y);
+    //setGunAngle(parseInt(ang));//test
+
+    intervAim = setInterval(function(){
+
+        if(angle < mouseAng){
+            moveGun(1);
+        }
+        else if(angle > mouseAng){
+            moveGun(-1);
+        }
+        mouseDownTicks++;
+
+    }, INTERV_MOUSE_AIM);
+}
+
+function mouseUp(fire){
+    clearInterval(intervAim);
+    if(fire){
+        board.className = "";
+        fireHit();
+    }
+}
+function getCrosshairAngle(x, y){
+//use Math.asin / acos (pos x / y)?
+    console.log("getCrosshairAngle med x,y " + x + "," + y);
+    //get dist x, y then divide
+    var dx = x - GUN_X_OFFSET;
+    var dy = BOARD_HEIGHT - y;
+
+    console.log("dx,dy: " + dx + "," + dy);
+
+    yx = dy/dx; //like fx
+
+    if(yx == 1){ //45 deg
+        return 45;
+    }
+
+    var right = yx >= 0;//aiming right side
+
+
+    var grad = 0, asin=0, acos=0;
+    var hyp = Math.sqrt(dx*dx + dy*dy);//hypotenusan
+
+    var xKvot = dx / hyp;
+    var yKvot = dy / hyp;
+
+    asin = Math.asin(xKvot);
+
+    grad = asin / (2*Math.PI) * 360;
+    console.log(grad);
+    return Math.round(grad);
 }
 </script>
 

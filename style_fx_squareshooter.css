@@ -10,7 +10,7 @@ body {
 
 button, input, input[type="button"], input[type="number"] {
     font-size: 40px;
-    width: 23%;
+    width: 19%;
     vertical-align: middle;
     background-color: #444;
     color: #ccc;
@@ -273,7 +273,7 @@ input#aimer{
     left: 10px;
 
     background: transparent;
-    width: 50%;
+    width: 75%;
     margin: 0 auto;
 }
 

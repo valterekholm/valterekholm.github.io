@@ -271,8 +271,10 @@ input#aimer{
     position: fixed;
     top: 0;
     left: 10px;
+
     background: transparent;
     width: 50%;
+    margin: 0 auto;
 }
 
 #hearts img {
@@ -286,7 +288,7 @@ input#aimer{
 
 .heartSVG {
     fill: red !important;
-    stroke: pink !important;
+    /*stroke: pink !important;*/
 }
 
 #points {

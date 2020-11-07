@@ -149,12 +149,13 @@ input#aimer{
     width: 700px;
     height: 700px;
     border: 1px solid #775;
-    background: rgba(60, 60, 30, .8);
+    background: rgba(60, 60, 30, .1);
     background-image: url("circle_white.png");
     background-repeat: no-repeat;
     background-position: 328px 680px;
     margin: 10px auto;
     overflow: hidden;
+    z-index: 100;
 }
 
 #board.aiming {

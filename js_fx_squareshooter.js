@@ -835,6 +835,7 @@ function mouseUp(fire){
         fireHit();
     }
 }
+
 function getCrosshairAngle(x, y){
 //use Math.asin / acos (pos x / y)?
     console.log("getCrosshairAngle med x,y " + x + "," + y);

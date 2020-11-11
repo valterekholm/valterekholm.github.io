@@ -32,7 +32,6 @@ targTimeout = null;
 var targetLowest = 170;//hight from "ground"
 var minLen = 100, maxLen=200; //target length limits
 
-
 intervBeam_ = 40;//80;
 targetStep = 1;
 intervWindow_ = 20;

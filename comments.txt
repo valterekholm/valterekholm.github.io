@@ -1,0 +1,7 @@
+2020-11-11
+
+Want to change behaviour for beam reload. Currently the one/only beam is reused, when it passes out of screen it gets moved back to the gun.
+
+It takes between 0.8 and 1.2 secs for this. Want to have a recharge instead, not depending on the reuse of one beam.
+
+Must allow multiple beams... beams must have an array.

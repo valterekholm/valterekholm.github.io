@@ -5,7 +5,7 @@ GUN_X_OFFSET = 350;
 SVG_GUN_WIDTH = 100;//ALSO HEIGHT
 WAIT_AFTER_HIT = 3000;
 minHitDecay = 1000;
-MAX_TARGET_STEP = 4//5;//higher is faster
+MAX_TARGET_STEP = 8//4//5;//higher is faster
 angle = 1; oldAngle = 0;
 
 INTERV_MOUSE_AIM = 40;
@@ -13,6 +13,8 @@ INTERV_MOUSE_AIM = 40;
 BOARD_HEIGHT = 700;//px, use as width also
 
 MAX_GUN_ANGLE = 85;
+
+STATS_DESCRIPTION = "The columns show the distance between 'beam' and target";
 
 moveGunInterv = null;
 intervBeam = null;
@@ -168,6 +170,7 @@ window.onload = function () {
             case 65: //a
                 makeBreak();
                 if (saveStats) {
+                    alert("Presentings stats:\n" + STATS_DESCRIPTION);
                     presentStats();
                 }
                 saveStats = false;//prevent double statsGraphs
@@ -805,6 +808,9 @@ function getDist(x1, y1, x2, y2) {
 function presentStats() {
     var statsArea = document.querySelector("#statsArea");
     var len = stats.length;
+    if(len == 0){
+        alert("The 'stats' is empty");
+    }
     for (var i = 0; i < len; i++) {
         /*var span = document.createElement("span");
         span.innerHTML = stats[i];

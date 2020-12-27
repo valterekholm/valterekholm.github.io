@@ -314,6 +314,8 @@ input#aimer{
     border-width: 1px 1px 1px 0;
     border-style: solid;
     display: inline-block;
+    background-color: #775;
+    border-color: chocolate;
 }
 
 @media only screen and (min-width: 992px) {

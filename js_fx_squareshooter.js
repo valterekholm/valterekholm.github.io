@@ -198,6 +198,12 @@ window.onload = function () {
         var messsage_mobile = "<h2>Instructions / alternatives</h2><h3>Touch game area to aim, release to fire.</h3>";
         messageBanner(message_standard, 7000);
     });
+    
+    info.addEventListener("mousedown", function () {
+        var message_standard = "<h2>Instructions / alternatives</h2><h3>1. Use arrows to aim, fire with space-bar, 's' to toggle sound.<br><br>2. Use mouse to aim, click-hold on area.<br><br>3. Use slider and button</h3>";
+        var messsage_mobile = "<h2>Instructions / alternatives</h2><h3>Touch game area to aim, release to fire.</h3>";
+        messageBanner(message_mobile, 7000);
+    });
 
     info.className = "";//for animation (transition)
 
@@ -248,6 +254,9 @@ window.onload = function () {
     });
 
     fireBtn.addEventListener("click", function () {
+        fireHit();
+    });
+    fireBtn.addEventListener("mousedown", function () {
         fireHit();
     });
 
@@ -888,6 +897,7 @@ function getCrosshairAngle(x, y) {
 }
 
 //test: to capture touch screen
+//issue: might remove click event response
 function touch2Mouse(e) {
     var theTouch = e.changedTouches[0];
     var mouseEv;

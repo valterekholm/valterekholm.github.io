@@ -231,6 +231,7 @@ z-index:1000
 .holder {
     background:black;
     text-align: center;
+    touch-action: none;
 }
 
 #window.blow {

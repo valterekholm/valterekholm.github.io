@@ -261,9 +261,9 @@ window.onload = function () {
 
 
     //test: capture touch screen...
-    //document.addEventListener("touchstart", touch2Mouse, true);
-    //document.addEventListener("touchmove", touch2Mouse, true);
-    //document.addEventListener("touchend", touch2Mouse, true);
+    document.addEventListener("touchstart", touch2Mouse, true);
+    document.addEventListener("touchmove", touch2Mouse, true);
+    document.addEventListener("touchend", touch2Mouse, true);
 
 
 }//end window onload

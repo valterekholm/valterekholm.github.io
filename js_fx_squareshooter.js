@@ -156,6 +156,12 @@ window.onload = function () {
 
     soundOn = true;
     soundBtn = document.querySelector("#soundBtn");
+    
+    //onmousedown="toggleSound(this)"
+    soundBtn.addEventListener("mousedown", function(){
+            toggleSound(this);
+        }
+    );
 
     window.addEventListener("keydown", function (ev) {
         //todo make like keypress but for arrow btns

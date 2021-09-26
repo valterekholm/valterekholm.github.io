@@ -199,6 +199,7 @@ window.onload = function () {
         messageBanner(message_standard, 7000);
     });
     
+    //added this to fix issue with mobile screen usage (see touch2Mouse)
     info.addEventListener("mousedown", function () {
         var message_standard = "<h2>Instructions / alternatives</h2><h3>1. Use arrows to aim, fire with space-bar, 's' to toggle sound.<br><br>2. Use mouse to aim, click-hold on area.<br><br>3. Use slider and button</h3>";
         var messsage_mobile = "<h2>Instructions / alternatives</h2><h3>Touch game area to aim, release to fire.</h3>";
@@ -256,6 +257,7 @@ window.onload = function () {
     fireBtn.addEventListener("click", function () {
         fireHit();
     });
+    //added this to fix issue with mobile screen usage (see touch2Mouse)
     fireBtn.addEventListener("mousedown", function () {
         fireHit();
     });

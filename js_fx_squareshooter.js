@@ -149,7 +149,7 @@ window.onload = function () {
     /*sound*/
     sound1 = document.createElement("audio");
     sound1.src = "button-6.mp3";
-    sound1.volume = 1.0;
+    sound1.volume = 0.25;
     sound1.autoPlay = false;
     sound1.preLoad = true;
 

@@ -1,0 +1,309 @@
+<!doctype html>
+<html>
+<head>
+    <style>
+        body{
+            text-align: center;
+            padding: 25px;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+        table{
+            border-collapse: collapse;
+            margin: 0 auto;
+            cursor: crosshair;
+        }
+        td{
+            border: 2px solid blue;
+        }
+        .messageBox{
+            width: 100%;
+            max-width: 500px;
+            min-height: 300px;
+        }
+        button{
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Valter Ekholm</h1>
+
+
+<script>
+
+    const tw = 10;
+    const th = 10;//cells
+    const cellPixels = 10;
+    const useContinousDraw = true;
+    let cellMem = [];
+    let colorType = {};//for init cellMem
+    colorType.value = false; //false = white/empty
+
+    let drawColor = true; //true = black/filled
+    let noColor = false; //false = white/empty
+
+    let myColor = drawColor; //to be used, changeble
+
+    const noColorHexVal = "#fff";//for CSS
+    const drawColorHexVal = "#000";//for CSS
+
+    let posCheckIntervalVar = null; // interval-var for the checking of pointer pos
+    let posCheckInterval = 10;
+    let mouseDownYes = false;//assuming starting with "mouse up"
+
+    let fileSaveType = {}
+
+    const SAVE_ELEMENT_ID = "myDataText";
+    const DRAW_TABLE_ID = "myTable";
+
+    initCellMem(cellMem, colorType);
+
+    //console.log(cellMem);
+
+    window.onload = function(){
+        //alert("hello, this is 'Draw on table'");
+        document.body.appendChild(makeTable(tw,th, DRAW_TABLE_ID));
+        document.body.appendChild(makeToolsMenu("toolsMenu"));
+        document.body.appendChild(makeFileMenu("fileMenu"));
+
+        if(useContinousDraw){
+            posCheckIntervalVar = setInterval(posCheckInterval, function(){
+                //maybe needed if onmouseOver doesn't suffice
+            })
+        }
+    }
+
+    function makeTable(width, height, id){
+        let newTable = document.createElement("table");
+        newTable.id = id;
+        for(let i=0; i<height; i++){
+            let newRow = document.createElement("tr");
+            newTable.appendChild(newRow);
+            for(let j=0; j<width; j++){
+                let newCell = document.createElement("td");
+                newCell.style.width = cellPixels+"px";
+                newCell.style.height = cellPixels+"px";
+                newRow.appendChild(newCell);
+
+                /*newCell.addEventListener("click", function(ev){
+                    let cellInfo = handleCellClick(ev)
+                    updateCellMem(cellInfo, myColor);
+                    updateMyTable(document.querySelector("#mytable"));
+                });*/
+
+                if(useContinousDraw){
+                    newCell.addEventListener("mouseenter", function(ev){
+                        if(mouseDownYes){
+                            let cellInfo = handleCellClick(ev)
+                            updateCellMem(cellInfo, myColor);
+                            updateMyTable(document.querySelector("#" + DRAW_TABLE_ID));
+                        }
+                    })
+
+                    newCell.addEventListener("mousedown", function(ev){
+                        let cellInfo = handleCellClick(ev)
+                        updateCellMem(cellInfo, myColor);
+                        updateMyTable(document.querySelector("#" + DRAW_TABLE_ID));
+                    })
+                }
+            }
+        }
+
+        newTable.addEventListener("mousedown", function(ev){
+            mouseDownYes = true;
+        });//todo: maybe extract this into a seperate function
+
+        document.body.addEventListener("mouseup", function(ev){
+            mouseDownYes = false;
+        });
+        return newTable;
+    }
+
+    //TODO: if used for mouseenter also - change name
+    function handleCellClick(ev){
+        //console.log(ev);
+        let cellInfo = {};
+
+        if(ev.target.tagName == "TD"){
+            let cell = ev.target;
+            cellInfo.posX = cell.cellIndex;
+            cellInfo.posY = cell.parentNode.rowIndex;
+            cellInfo.pos = cellInfo.posY * tw + cellInfo.posX; // a position in 1-dimension, VGA-like
+        }
+
+        return cellInfo;
+    }
+    
+    function initCellMem(mem, colorT){
+        for(let i=0; i<tw*th; i++){
+            mem.push(colorT.value);
+        }
+    }
+
+    function updateCellMem(cellInfo, color){
+        cellMem[cellInfo.pos] = color;
+    }
+
+    function updateMyTable(tbl){
+        let rows =  tbl.getElementsByTagName("tr");
+        let rlen = rows.length;
+
+        for(let i=0; i<rlen; i++){
+            let cells = rows[i].getElementsByTagName("td");
+            let clen = cells.length;
+
+            for(let j = 0; j<clen; j++){
+                let index1d = i*clen + j;
+                let ce = cells[j];
+                
+                if(cellMem[index1d] == drawColor){
+                    ce.style.backgroundColor = drawColorHexVal;
+                }
+                else if(cellMem[index1d] == noColor){
+                    ce.style.backgroundColor = noColorHexVal;
+                }
+            }
+        }
+    }
+
+    function makeToolsMenu(id){
+        let toolsDiv = document.createElement("div");
+        toolsDiv.id = id;
+
+        let blackBtn = document.createElement("button");
+        blackBtn.style.backgroundColor = "#000";
+        blackBtn.innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+
+        toolsDiv.appendChild(blackBtn);
+
+        let whiteBtn = document.createElement("button");
+        whiteBtn.style.backgroundColor = "#fff";
+        whiteBtn.innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+
+        toolsDiv.appendChild(whiteBtn);
+
+        initBtnColorFunction(blackBtn, true);//2:nd arg representing a color
+        initBtnColorFunction(whiteBtn, false);//2:nd arg representing a color
+
+        return toolsDiv;
+    }
+
+    function makeFileMenu(id){
+        let toolsDiv = document.createElement("div");
+        toolsDiv.id = id;
+
+        let saveBtn = document.createElement("button");
+        //blackBtn.style
+        saveBtn.innerHTML = "Save";
+
+        toolsDiv.appendChild(saveBtn);
+
+        let loadBtn = document.createElement("button");
+        //loadBtn.style.backgroundColor = "#fff";
+        loadBtn.innerHTML = "Load";
+
+        toolsDiv.appendChild(loadBtn);
+
+        saveBtn.addEventListener("click", function(ev){
+            let text = exportToJSONString();
+            console.log(text);
+            //alert("see developer console");
+            //alert(text);
+            document.body.appendChild(makeTextArea(SAVE_ELEMENT_ID, text, "messageBox", "Area for data to save or read"));
+        })
+
+        loadBtn.addEventListener("click", function(ev){
+            let jsonTextElem = document.querySelector("#" + SAVE_ELEMENT_ID);
+            let jsonData = jsonTextElem.innerHTML;
+            loadTableFromJSON(jsonData);
+        })
+
+        return toolsDiv;
+    }
+
+    function initBtnColorFunction(btn, color){
+        btn.addEventListener("click", function(){
+            myColor = color;
+        })
+    }
+
+    function exportToJSONString(){
+        fileSaveType.drawColor = drawColor;
+        fileSaveType.noColor = noColor;
+        fileSaveType.drawColorHexVal = drawColorHexVal;
+        fileSaveType.noColorHexVal = noColorHexVal;
+        fileSaveType.tw = tw;
+        fileSaveType.th = th,
+        fileSaveType.cellMem = cellMem;
+        return JSON.stringify(fileSaveType);
+    }
+
+    function loadTableFromJSON(json){
+        let dataObj = JSON.parse(json);
+
+        let oldTable = document.querySelector("#" + DRAW_TABLE_ID);
+
+        let newT = makeTable(dataObj.tw, dataObj.th, "tempID_01");
+
+        cellMem = dataObj.cellMem;//getting "image data"
+
+        updateMyTable(newT);
+
+        let tableParent = oldTable.parentElement;
+
+        tableParent.insertBefore(newT, oldTable);
+
+        tableParent.removeChild(oldTable);
+
+        newT.id = DRAW_TABLE_ID;
+    }
+
+    function makeTextArea(id, text, className, title){
+
+        if(document.querySelector("#" + id)){
+            let oldArea = document.querySelector("#" + id);
+            oldArea.parentElement.removeChild(oldArea);
+        }
+
+        let textA = document.createElement("textarea");
+        textA.className = className;
+        textA.id = id;
+        textA.title = title;
+        textA.innerHTML = text;
+        //alert(text);
+        return textA;
+    }
+/*
+    function makeClosableDiv(id, child, styleWidth){
+        let myDiv = document.createElement("div");
+        myDiv.id = id;
+
+        let topRow = document.createElement("div");
+        myDiv.appendChild(topRow);
+
+        let closeBtn = document.createElement("button");
+        closeBtn.innerHTML = "X";
+
+        closeBtn.addEventListener("click", function(){
+            let mother = document.querySelector("#" + id);
+            let grandMother = mother.parentElement;
+
+            grandMother.removeChild(mother);
+        })
+
+        topRow.appendChild(closeBtn);
+
+        let contentDiv = document.createElement("div");
+        contentDiv.style.width = styleWidth;
+
+        alert(typeof child);
+
+        contentDiv.appendChild(child);
+
+        return myDiv;
+    }
+    */
+</script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body{
+                font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            }
+            body *{
+                box-sizing: border-box;
+            }
+
+            /*ul.x{
+                counter-reset: section;
+            }*/
+
+            /*ul.x>div:nth-last-child(10n)::before {
+                counter-increment: -1;
+                content: counter(section);
+            }*/
+            div{
+                border-left-width: 1px;
+            }
+            label{
+                display: block;
+            }
+            ul{
+                list-style-type: none;
+                padding-left:6px;
+            }
+            li{
+                position: relative;
+            }
+            ul li:before {
+                content: counter(a);
+                counter-increment: a -1;
+                position: absolute;   
+                right: -1.5em;
+                bottom: .5em;
+                color: transparent;   
+                font-size: 1rem;
+            }
+            div.co{
+                display: inline-block;
+                width: 21%;
+            }
+            div>ul>li{
+                height: 3mm;
+                border-top: 1px solid #333;
+            }
+            ul.x{
+                border-bottom: 0.5mm solid #333;
+                width: 39%;
+            }
+            ul.x>li{
+                width: 100%;
+            }
+            ul.x>li:nth-last-child(10n){
+                width: 120%;
+                border-top-width: .6mm;
+            }
+            ul li:nth-last-child(10n):before {
+                color: black;
+            }
+            @media print{
+                label{
+                    display: inline-block;
+                    width:60%;
+                }
+                p span{
+                    display: none;
+                }
+                input{
+                    display: inline-block;
+                    width: 30%;
+                    border:none;
+                }
+                image{
+                    display: none;
+                }
+                div{
+                    height: auto;
+                    width:30mm;
+                    border-left:1px solid gray;
+                }
+                ul.sek10>li{
+                    border-top: .5mm solid #111;
+                    height: 2.9mm;
+                }
+                ul.sek5>li{
+                    border-top: .5mm solid #111;
+                    height: 1.97mm;
+                }
+                ul.sek2>li{
+                    border-top: .5mm solid #111;
+                    height: 1.79mm;
+                }
+                ul.sek1>li{
+                    border-top: .5mm solid #111;
+                    height: 1.79mm;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="co">
+        <ul class="x sek10" reversed style=""><!--counter-reset: a 21;-->
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+        </ul>
+        <p>10-kr<span>, á höjd: 2,9 mm</span></p>
+        <label for="antal_1">Antal:</label><input type="number" step="1" min="2" name="antal_1" id="antal_1" oninput="adjustPile(this)">
+    </div>
+    <div class="co">
+        <ul class="x sek5" reversed style="">
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+        </ul>
+        <p>5-kr<span>, á höjd: 1,97 mm</span></p>
+        <label for="antal_2">Antal:</label><input type="number" step="1" min="2" name="antal_2" id="antal_2" oninput="adjustPile(this)">
+    </div>
+    <div class="co">
+        <ul class="x sek2" reversed style="">
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+        </ul>
+        <p>2-kr<span>, á höjd: 1,79 mm</span></p>
+        <label for="antal_3">Antal:</label><input type="number" step="1" min="2" name="antal_3" id="antal_3" oninput="adjustPile(this)">
+    </div>
+    <div class="co">
+        <ul class="x sek1" reversed style="">
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+        </ul>
+        <p>1-kr<span>, á höjd: 1,79 mm</span></p>
+        <label for="antal_4">Antal:</label><input type="number" step="1" min="2" name="antal_4" id="antal_4" oninput="adjustPile(this)">
+    </div>
+
+    <h4>Dessa staplar är ämnade att skriva ut på papper, att användas som linjaler för att räkna mynt.</h4>
+    <p>De kan klippas ut och klistras i en rektangulär ask vid ett hörn.</p>
+    <p>Vid utskrift: se till att storleken är 'ursprunglig storlek'.</p>
+
+    <img src="ask_med_linjal.jpg" alt="Box with coin-count ruler">
+
+    <script>
+
+        const coinTypes = 4;
+
+        window.onload = function(){
+
+            //init inputs to handle events
+            let inputsNums = document.getElementsByTagName("input");
+
+            console.log(inputsNums.length);
+
+            for(let item of inputsNums){
+                console.log(item);
+                setMyPileLength(item);
+            }
+            updateULs();
+        }
+
+        function updateULs(){
+            //set style, to make numbering by css
+            for(let i=0; i<coinTypes; i++){
+                let ulx = document.getElementsByTagName("ul")[i];
+                setUlStyle(ulx);
+            }
+        }
+
+        function adjustPile(callerElem){
+            //alert(callerElem);
+            let parentDiv = callerElem.parentElement;
+            console.log(parentDiv);
+            let pileHolder = parentDiv.firstElementChild;
+            console.log(pileHolder);
+            
+            let pileLen = pileHolder.children.length;
+            console.log(pileLen);
+            
+            let goal = callerElem.value;
+            console.log(goal);
+
+            while(pileLen < goal){
+                pileHolder.appendChild(document.createElement("li"));
+                pileLen = pileHolder.children.length;
+            }
+            while(pileLen >= goal){
+                console.log(pileLen + " " + goal);
+                let ch = pileHolder.firstElementChild;
+                console.log(ch);
+                pileHolder.removeChild(ch);
+                pileLen = pileHolder.children.length;
+            }
+
+            updateULs();
+        }
+
+        function setMyPileLength(callerElem){
+            console.log("setMyPileLength");
+            console.log(callerElem);
+            callerElem.value = callerElem.parentElement.firstElementChild.children.length;
+        }
+
+        function setUlStyle(ulx){
+            console.log(ulx);
+            let countLi = ulx.children.length;
+            countLi++;
+            console.log(countLi);
+            ulx.style = "counter-reset: a " + countLi + ";";
+        }
+    </script>
+    </body>
+</html>

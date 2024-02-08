@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
     <head>
@@ -245,32 +246,34 @@
         function adjustPile(callerElem){
             //alert(callerElem);
             let parentDiv = callerElem.parentElement;
-            console.log(parentDiv);
+            //console.log(parentDiv);
             let pileHolder = parentDiv.firstElementChild;
-            console.log(pileHolder);
+            //console.log(pileHolder);
             
             let pileLen = pileHolder.children.length;
-            console.log(pileLen);
+            //console.log(pileLen);
             
             let goal = callerElem.value;
-            console.log(goal);
+            //console.log(goal);
 
             while(pileLen < goal){
                 pileHolder.appendChild(document.createElement("li"));
-                pileLen = pileHolder.children.length;
+                pileLen++;// = pileHolder.children.length;
+                console.log("increasing");
             }
-            while(pileLen >= goal){
+            while(pileLen > goal){
+                console.log("decreasing");
                 console.log(pileLen + " " + goal);
                 let ch = pileHolder.firstElementChild;
                 console.log(ch);
                 pileHolder.removeChild(ch);
-                pileLen = pileHolder.children.length;
+                pileLen--;// = pileHolder.children.length;
             }
 
             updateULs();
         }
 
-        function setMyPileLength(callerElem){
+        function setMyPileLength(callerElem){//from hardcoded html
             console.log("setMyPileLength");
             console.log(callerElem);
             callerElem.value = callerElem.parentElement.firstElementChild.children.length;
@@ -279,8 +282,8 @@
         function setUlStyle(ulx){
             console.log(ulx);
             let countLi = ulx.children.length;
-            countLi++;
             console.log(countLi);
+            countLi++;
             ulx.style = "counter-reset: a " + countLi + ";";
         }
     </script>

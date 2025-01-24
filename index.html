@@ -2,7 +2,12 @@
 <html>
     <head>
         <title>Table labyrint</title>
+        <meta charset="utf-8">
+        <!--meta name="viewport" content="width=device-width, initial-scale=1"-->
         <style id="myStyle">
+            *, *::before, *::after{
+                box-sizing: border-box;
+            }
             table{
                 border: 1px solid #ddd;
                 border-collapse: collapse;
@@ -16,8 +21,8 @@
                 border-color: #444;
                 border-width: 0px;
                 width: 30px;
-                height: 30px;
-                padding: 0;
+                height: 10px;
+                padding: 4px;
             }
             textarea{
                 font-size: 19px;
@@ -80,6 +85,37 @@
                 width:100%;
                 height:100%;
             }
+            @media screen and (max-width:500px) and (min-height:600px){
+
+                html, body{
+                    margin: 0;
+                }
+
+                div#dialog{
+                    position:fixed;
+                    bottom:0;
+                    width: 100%!important;
+                    height:6%!important;
+
+                }
+
+                #controlPanel{
+                    width:100%;
+                    height:20%;
+                    margin: 0;
+                }
+
+                #controlPanel td{
+                    padding:1px;
+                }
+
+                .navBtn{
+                    padding: 3px 10px 1px 10px;
+                    font-size: 30px;
+                }
+
+                
+            }
         </style>
     </head>
     <body>
@@ -110,6 +146,8 @@
             bulldozer_.imgElem = document.getElementById("img1");
 
             bulldozerImgs_ = ["bulldozer-U.jpg", "bulldozer-R.jpg", "bulldozer-D.jpg", "bulldozer-L.jpg"];
+
+            exitMove_ = 0;
 
             window.onload = function(){
                 console.log("Hej");
@@ -782,7 +820,26 @@
                 if(bdy > -200){
                     bdy--;
                 }
+
+                //bad coding for the leaving-off effect
+                switch(bulldozer_.dir){
+                    case 1://up, is already going...
+                        break;
+                    case 2:
+                        bdx+=exitMove_;
+                        break;
+                    case 3:
+                        bdy+=exitMove_;
+                        break;
+                    case 4:
+                        bdx-=exitMove_;
+                }
+                if(exitMove_>0){
+                    exitMove_--;
+                }
+
                 bd.style.top = bdy + "px";
+                bd.style.left = bdx + "px";
             }
 
             function initControlPanel(cData, idCp, idLabyrint){
@@ -798,12 +855,13 @@
                     if(element.className == "navBtn"){
                         element.addEventListener("click", function(e){
                             let dir = parseInt(this.dataset.dir);
+                            bulldozer_.dir = dir;
                             //cData, position, wall, value, checkNeighbour
                             let wallMode = false;
                             let alsoUpdate = updateACellDataWall(cData,bulldozer_.position,dir,wallMode,true);
 
                             //rotate bd
-                            console.log(dir);
+                            //console.log(dir);
                             bulldozer_.imgElem.src = bulldozerImgs_[dir-1];
 
                             if(alsoUpdate>0){
@@ -850,7 +908,7 @@
                                 progress_++;
                                 progress(cData, idLabyrint);
                                 updateTableFromData(cData, idLabyrint);
-                                parkBulldozer();
+                                parkBulldozer(dir);
                                 clearControlPanel(idCp);
                             }
 
@@ -878,7 +936,10 @@
                 )
             }
 
-            function parkBulldozer(){
+            //exitDir direction when exiting
+            function parkBulldozer(exitDir){
+                console.log("park with direction: " + explainDir(exitDir));
+                exitMove_ = 20;
                 setInterval(moveBulldozerUpStep,10);
                 document.querySelector("#bulldozer").style.boxShadow= "10px 10px 17px 0px rgba(0,0,0,0.8)";
 
@@ -911,6 +972,15 @@
                 }
 
             
+            }
+
+            function explainDir(dir){
+                let text = "up";
+                if(dir==2) text = "right";
+                if(dir==3) text =  "down";
+                if (dir==4) text = "left"
+
+                return text;
             }
             
         </script>

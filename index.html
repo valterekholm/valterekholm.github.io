@@ -43,10 +43,31 @@
 
             #controlPanel{
                 margin-left:10px;
+                text-align: center;
+                border-style: double!important;
+                border-width: 6px;
+                font-size: 16px;
+                font-family: 'Courier New', Courier, monospace;
+                font-weight: 700;
             }
 
             #controlPanel input{
                 width:60px;
+
+                padding: 4px;
+            }
+
+            #controlPanel td{
+                padding:5px;
+            }
+
+            #controlPanel label{
+                display: block;
+            }
+
+            .navBtn{
+                padding:10px;
+                font-size: 30px;
             }
 
             #bulldozer{
@@ -468,7 +489,8 @@
                         }
                     }
 
-                    let toAdd = "\n<tr><td colspan=3><input type='number' id='x' value='0'><input type='number' id='y' value='0'></td></tr>";
+                    let toAdd = "\n<tr><td colspan=3>\
+                        <label for='x'>x: <input type='number' id='x' value='0'></label><label for='y'>y: <input type='number' id='y' value='0'></label></td></tr>";
 
                     tbl.innerHTML = tbl.innerHTML + toAdd;
 
@@ -660,6 +682,21 @@
                 let targetHtmlCell = document.getElementById(tableId).getElementsByTagName("td")[pos];
                 moveToCell(targetHtmlCell);
                 bulldozer_.position = pos;
+
+                /*
+                if(document.getElementById("x")){
+                    document.getElementById("x").value = getXFromN(pos, size_);
+                    document.getElementById("y").value = getYFromN(pos, size_);
+                }*/
+
+                setTimeout(function(){
+
+                    if(document.getElementById("x")){
+                        document.getElementById("x").value = getXFromN(pos, size_);
+                        document.getElementById("y").value = getYFromN(pos, size_);
+                    }
+                }, 200);
+
             }
 
             function moveToCell(cell){
@@ -668,7 +705,7 @@
                 //console.log(rect);
                 setTimeout(function(){
                     moveBulldozerTo(rect.x, rect.y);
-                },100);
+                },40);
                 
             }
 
@@ -843,6 +880,8 @@
 
             function parkBulldozer(){
                 setInterval(moveBulldozerUpStep,10);
+                document.querySelector("#bulldozer").style.boxShadow= "10px 10px 17px 0px rgba(0,0,0,0.8)";
+
             }
 
 

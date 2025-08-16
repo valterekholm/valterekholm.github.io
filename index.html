@@ -1,4 +1,4 @@
-<!DOCTYPE htmtl>
+<!DOCTYPE html>
 <html>
     <head>
         <title>Table labyrint</title>
@@ -8,8 +8,11 @@
             *, *::before, *::after{
                 box-sizing: border-box;
             }
+			body{
+				margin: 14px;
+			}
             table{
-                border: 1px solid #ddd;
+                border: 0px solid #ddd;
                 border-collapse: collapse;
                 margin: 0;
                 padding: 10px;
@@ -47,13 +50,14 @@
             }
 
             #controlPanel{
-                margin-left:10px;
+                margin-left:0px;
                 text-align: center;
                 border-style: double!important;
                 border-width: 6px;
                 font-size: 16px;
                 font-family: 'Courier New', Courier, monospace;
                 font-weight: 700;
+				width:100%;
             }
 
             #controlPanel input{
@@ -186,9 +190,10 @@
 
                 let idControlPanel = "controlPanel";
 
+				document.body.appendChild(createGameDialog("dialog"));
                 document.body.appendChild(makeControlPanel(cellData, idControlPanel, idLabyrint));
 
-                document.body.appendChild(createGameDialog("dialog"));
+                
 
                 progress(cellData, t2.id);
                 progress_++;

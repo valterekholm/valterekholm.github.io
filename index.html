@@ -4,7 +4,1060 @@
         <title>Table labyrint</title>
         <meta charset="utf-8">
         <!--meta name="viewport" content="width=device-width, initial-scale=1"-->
+        <style id="myStyle"><!DOCTYPE html>
+<html>
+    <head>
+        <title>Table labyrint</title>
+        <meta charset="utf-8">
+        <!--meta name="viewport" content="width=device-width, initial-scale=1"-->
         <style id="myStyle">
+            *, *::before, *::after{
+                box-sizing: border-box;
+            }
+			body{
+				margin: 14px;
+			}
+            table{
+                border: 0px solid #ddd;
+                border-collapse: collapse;
+                margin: 0;
+                padding: 10px;
+                border-spacing: 1px;
+                float: left;
+            }
+            td{
+                border-style: solid;
+                border-color: #444;
+                border-width: 0px;
+                width: 30px;
+                height: 10px;
+                padding: 4px;
+            }
+            textarea{
+                font-size: 19px;
+                font-family: 'Courier New', Courier, monospace;
+                font-weight: 700;
+                width: 100%;
+            }
+            .s0000{
+                border: 0px solid #444;
+            }
+            .s0001{
+                border-top-width: 1px;
+            }
+            .s0010{
+                border-right-width: 1px;
+            }
+            .s0100{
+                border-bottom-width: 1px;
+            }
+            .s1000{
+                border-left-width: 1px;
+            }
+
+            #controlPanel{
+                margin-left:0px;
+                text-align: center;
+                border-style: double!important;
+                border-width: 6px;
+                font-size: 16px;
+                font-family: 'Courier New', Courier, monospace;
+                font-weight: 700;
+				width:100%;
+            }
+
+            #controlPanel input{
+                width:60px;
+
+                padding: 4px;
+            }
+
+            #controlPanel td{
+                padding:5px;
+            }
+
+            #controlPanel label{
+                display: block;
+            }
+
+            .navBtn{
+                padding:10px;
+                font-size: 30px;
+            }
+
+            #bulldozer{
+                position: absolute;
+                top: 0px;
+                left: 0px;
+            }
+
+            #bulldozer img{
+                width:100%;
+                height:100%;
+            }
+            @media screen and (max-width:400px) and (min-height:400px){
+
+                html, body{
+                    margin: 0;
+                }
+
+                div#dialog{
+                    position:fixed;
+                    bottom:0;
+                    width: 100%!important;
+                    height:6%!important;
+
+                }
+
+                #controlPanel{
+                    width:100%;
+                    height:20%;
+                    margin: 0;
+                }
+
+                #controlPanel td{
+                    padding:1px;
+                }
+
+                .navBtn{
+                    padding: 3px 10px 1px 10px;
+                    font-size: 30px;
+                }
+
+                
+            }
+        </style>
+    </head>
+    <body>
+        <div id="bulldozer"><img src="bulldozer-R.jpg" alt="Bulldozer" id="img1"></div>
+        <script>
+            const fourBitsOn = 15;
+            size_ = 4;
+
+            let val = "x";
+            do{
+                val = parseInt(prompt("Please enter a size for the labyrint (3-20)"));
+            }while(!integerGate(val,3, 20));
+
+            size_ = val;
+
+            let width = size_, height = size_;
+            cellData = {};
+
+            let startSpace = null; //the entry point of the labyrint, an integer from 1 to
+
+
+            let tableWidthPx = 400; //TODO: maybe adjust in runtime
+
+            progress_ = 0;
+            imgWidth_ = 0;
+            imgHeight_ = 0; //for bulldozer
+            bulldozer_ = {};
+            bulldozer_.imgElem = document.getElementById("img1");
+
+            bulldozerImgs_ = ["bulldozer-U.jpg", "bulldozer-R.jpg", "bulldozer-D.jpg", "bulldozer-L.jpg"];
+
+            exitMove_ = 0;
+
+            window.onload = function(){
+                console.log("Hej");
+
+                let t = createTable(width, height);
+                initCellData(cellData, width, height, fourBitsOn);//setting to a default value 15 = 4 bits of "1"
+                
+                //document.body.appendChild(t);
+
+                let cs = document.getElementsByTagName("td");
+
+                for(let i=0; i<cs.length; i++){
+                    setCellMode(cs[i], 15);
+//                    console.log(cs[i]);
+                }
+
+                let c = t.firstElementChild.firstElementChild;
+//                console.log(c);
+                setCellMode(c, 3);
+
+//                console.log("----");
+
+                //alsoUpdate values: 1=up, 2=right, 3=down, 4=left
+                let position = 0;
+                let wall = 2;
+                let wallMode = false;
+                let alsoUpdate = false;
+                //alsoUpdate = updateACellDataWall(cellData,position,wall,wallMode, true);
+ 
+
+                let idLabyrint = "labyrint"
+
+                let t2 = createTableFromData(cellData, idLabyrint);
+
+                document.body.appendChild(t2);
+
+                let idControlPanel = "controlPanel";
+
+				document.body.appendChild(createGameDialog("dialog"));
+                document.body.appendChild(makeControlPanel(cellData, idControlPanel, idLabyrint));
+
+                
+
+                progress(cellData, t2.id);
+                progress_++;
+                progress(cellData, t2.id);
+            }
+
+
+            function createTable(w, h){
+                let t = document.createElement("table");
+                for(let i = 0; i<h; i++){
+                    let r = document.createElement("tr");
+                    for(let j= 0; j<w; j++){
+                        let c = document.createElement("td");
+                        r.appendChild(c);
+                    }
+                    t.appendChild(r);
+                }
+                return t;
+            }
+
+            //For html table cell
+            function setCellMode(cell, m){
+                console.log("setCellMode " + cell + " " + m);
+                //m is to store 4 booleans in 4 least significant bits
+                let b0 = (m&1) != 0; // have an upper wall
+                let b1 = (m&2) != 0; // have an right wall
+                let b2 = (m&4) != 0; // have an bottom wall
+                let b3 = (m&8) != 0; // have an left wall
+                
+                console.log(b0);
+                console.log(b1);
+                console.log(b2);
+                console.log(b3);
+
+                cell.className = "";
+
+                if(m>0){
+                    if(b0){
+                        cell.className += " s0001";
+                    }
+                    if(b1){
+                        cell.className += " s0010";
+                    }
+                    if(b2){
+                        cell.className += " s0100";
+                    }
+                    if(b3){
+                        cell.className += " s1000";
+                    }
+                }
+                else{
+                    cell.className = "s0000";
+                }
+            }
+
+            function makeCellData(d){
+                let cd = {};
+
+                let b0 = (d&1) != 0; // have an upper wall
+                let b1 = (d&2) != 0; // have an right wall
+                let b2 = (d&4) != 0; // have an bottom wall
+                let b3 = (d&8) != 0; // have an left wall
+
+                cd.tw = b0;
+                cd.rw = b1;
+                cd.bw = b2;
+                cd.lw = b3;
+
+
+                return cd;
+            }
+
+            function initCellData(cData, width, height, defaultValue){
+                cData.cells = [];
+                cData.width = width;
+                cData.height = height;
+                for(let i= 0; i<height; i++){
+                    for(let j=0; j<width; j++){
+                        let cell = makeCellData(defaultValue);
+                        cData.cells.push(cell);
+                    }
+                }
+            }
+
+            //Update values for all walls
+            //d is an int whose 4 least significant bits are values of walls, up, right, down, left
+            function updateACellData(cData, position, d){
+
+                let b0 = (d&1) != 0; // have an upper wall
+                let b1 = (d&2) != 0; // have an right wall
+                let b2 = (d&4) != 0; // have an bottom wall
+                let b3 = (d&8) != 0; // have an left wall
+
+                cData.cells[position].tw = b0;
+                cData.cells[position].rw = b1;
+                cData.cells[position].bw = b2;
+                cData.cells[position].lw = b3;
+                
+            }
+
+            //Update values for a wall plus its neighbours
+            //cData - the set of data for the table
+            //position a 1-d position
+            //wall 1-top 2-right 3-bottom 4-left
+            //value - wall true/false
+            //checkNeighbour - if should follow this with a neighbour update
+
+            //return 0 if no neighbour
+            //if checkNeighbour, can return 1-4 for neighbour direction
+            function updateACellDataWall(cData, position, wall, value, checkNeighbour){
+
+                let posY = parseInt(position/cData.width);
+                let posX = position - posY*cData.width;
+
+                console.log(posX + " " + posY);
+
+                let ret = 0;
+
+                let wallsToNeighbours = 0;//bits for if neighbours are, from least significant, top,right... 
+
+                let xOffset = 0, yOffset = 0;
+                if(posX < cData.width){
+                    xOffset = cData.width - posX;
+                    if(posY < cData.height){
+                        yOffset = cData.height - posY;
+                    }
+                }
+
+                if(yOffset < cData.height){
+                    console.log("Have top neighbour");
+                    wallsToNeighbours = 1;
+                }
+                else{
+                    console.log("Have no top neightbour");
+                }
+
+                //bottom n
+                if(posY < cData.height-1){
+                    console.log("Have bottom neighbour");
+                    wallsToNeighbours += 4;
+                }
+                else{
+                    console.log("Have no bottom neighbour");
+                }
+
+
+                if(xOffset < cData.width){
+                    console.log("Have left neighbour");
+                    wallsToNeighbours += 8;
+                }
+                else{
+                    console.log("Have no left neightbour");
+                }
+
+                //right n
+                if(posX < cData.width-1){
+                    console.log("Have right neighbour");
+                    wallsToNeighbours += 2;
+                }
+                else{
+                    console.log("Have no right neighbour");
+                }
+
+                console.log("wallsToNeighbours: " + wallsToNeighbours)
+
+                //check wall
+                let wallBit = 1 << (wall-1);
+                console.log("Wall Bit " + wallBit);
+
+                let relatedNeighbour = (wallsToNeighbours & wallBit);
+
+                let relNeiBit = 0;
+
+                if(relatedNeighbour > 0){ +
+                    console.log("relatedNeighbour: " + relatedNeighbour);
+
+                    relNeiBit = countBitPosition(relatedNeighbour);
+                    //TODO: update neighbour with
+                    //updateACellData(cData, position, value)
+                }
+                else{
+                    console.log("neighbour check false");
+                    relNeiBit = -1;
+                }
+
+                //console.log("<<< WILL SET WALL " + wall + " TO " + value + " >>>");
+
+                switch(wall){
+                    case 1:
+                        //top wall
+                        cData.cells[position].tw = value;
+                        break;
+                    case 2:
+                        cData.cells[position].rw = value;
+                        break;
+                    case 3:
+                        cData.cells[position].bw = value;
+                        break;
+                    case 4:
+                        cData.cells[position].lw = value;
+                        break;
+                    default:
+                        console.error("Wrong selector for wall to update, must be 1-4, is " + wall);
+                }
+                if(checkNeighbour){
+                    //0 if no neighbour
+                    return relNeiBit;
+                }
+                else{
+                    return 0;
+                }
+            }
+
+            function createTableFromData(cData, id){
+                let t = document.createElement("table");
+                t.id = id;
+                for(let i = 0; i<cData.height; i++){
+                    let r = document.createElement("tr");
+                    for(let j= 0; j<cData.width; j++){
+                        let c = document.createElement("td");
+
+                        let index = i*cData.width + j;
+                        console.log("index " + index);
+                        console.log(cData.cells[index]);
+
+                        setCellMode(c, getModeFromData( cData.cells[index] ));
+                        r.appendChild(c);
+                    }
+                    t.appendChild(r);
+                }
+
+                //assuming table width and height are same
+
+                let cellWidthPx = parseInt(tableWidthPx / cData.width);
+                let toAdd = "\n\n#"+id+" td{ width: "+cellWidthPx+"px; height: "+cellWidthPx+"px; }\n \
+                #bulldozer{width: "+(cellWidthPx-4)+"px; height: "+(cellWidthPx-4)+"px;}";
+                addGlobalCss(toAdd);
+
+                imgWidth_ = cellWidthPx-4;
+                imgHeight_ = cellWidthPx-4;
+                return t;
+            }
+
+            function getModeFromData(data){
+                let mode = 0;
+                if(data.tw) mode += 1;
+
+                if(data.rw) mode += 2;
+
+                if(data.bw) mode += 4;
+
+                if(data.lw) mode += 8;
+
+                return mode;
+            }
+
+            //get the 1-based position of "that" bit
+            //Todo test that 7 gives 3
+            function countBitPosition(val){
+                console.log("countBitPos: " + (val));
+                return Math.floor(Math.log2(val) + 1);
+            }
+
+            function getXFromN(n, width){
+                let y = parseInt(n/width);
+                let x = n-y*width;
+                return x;
+            }
+
+            function getYFromN(n, width){
+                let y = parseInt(n/width);
+                //let x = n-y*width;
+                return y;
+            }
+
+            function getNFromXY(x, y, width){
+                console.log("getNFromXY " + x + " " + y + " " + width);
+                let n = width*y+x;
+                console.log("returning " + n);
+
+                return n;
+            }
+
+            //TODO: testa att (1,4,3,2) ger 1
+            function circulateValue(min, max, val, steps){
+                if(min<0){
+                    console.error("min<0");
+                    return val;
+                }
+                if(min>=max){
+                    console.error("min>=max");
+                    return val;
+                }
+                if(val>= min && val <=max){
+
+                    let diff = max-min;
+                    let offset = min;
+                    let val2 = val-offset;
+
+                    let newVal2 = (val2+steps)%(diff+1);
+
+                    return newVal2+offset;
+                }
+                else{
+                    console.error("circulateValue error, value not within min-max");
+                    return val;
+                }
+            }
+
+            function makeControlPanel(cData, tblId, labyrintId){
+                let panelTable = createTable(3,3);
+                panelTable.id = tblId;
+                let cells = panelTable.getElementsByTagName("td");
+
+                setTimeout(function(){
+                    let tbl = document.getElementById(tblId);
+
+                    if(tbl == null) return;
+
+                    let tds = tbl.getElementsByTagName("td");
+
+                    console.log(tds);
+
+                    let symbols = ['','^','','<', '', '>','','v',''];
+                    let dirs = [1,4,2,3];
+                    let btns = [];
+                    for(let i=0; i<tds.length; i++){
+                        let newB = document.createElement("button");
+                        let symbol = symbols[i%9];
+                        newB.innerHTML = symbol;
+                        //btns.push(newB);
+                        tds[i].appendChild(newB);
+                        if(symbol != ""){
+                            newB.dataset.dir = dirs[parseInt(i/2)];
+                            newB.className = "navBtn";
+                        }
+                    }
+
+                    let toAdd = "\n<tr><td colspan=3>\
+                        <label for='x'>x: <input type='number' id='x' value='0'></label><label for='y'>y: <input type='number' id='y' value='0'></label></td></tr>";
+
+                    tbl.innerHTML = tbl.innerHTML + toAdd;
+
+                    initControlPanel(cData, tblId, labyrintId);
+                })
+
+                return panelTable;
+
+            }
+
+            function createGameDialog(id){
+                let sheet = document.createElement("div");
+                sheet.id = id;
+
+                let messageBox = document.createElement("textarea");
+                messageBox.id="messageBox";
+                messageBox.rows = 5;
+                messageBox.disabled = true;
+                sheet.appendChild(messageBox);
+                addGlobalCss("\n\ndiv#" + id + "{width:260px; height:400px; background: #eed; float:right; padding:15px}");
+                
+                return sheet;
+
+            }
+
+            function addGlobalCss(toAdd){
+                const style = document.getElementById('myStyle');
+                //console.log(style);
+                //console.log(toAdd);
+                style.innerHTML = style.innerHTML + toAdd;
+            }
+
+            function message(m){
+                document.querySelector("#messageBox").innerHTML = m;
+            }
+
+            function progress(cData, tableId){
+                //alert("pr : " + progress_);
+                let msg = [];
+
+                //msg.push("Please enter size of labyrint, 3-20");
+                msg.push("Please give entry-point (1 - " + (size_*4) + ")");
+                msg.push("To finnish go out of labyrint");
+                msg.push("Ready");
+
+                message(msg[progress_]);
+
+                switch(progress_){
+                    case 0:
+                        let val = "x";
+                        do{
+                            val = parseInt(prompt(msg[progress_]));
+                        }while(!integerGate(val,1, (size_*4)))
+
+                        message("Entry space is ok");
+
+                        //open labyrint
+                        //setTimeout(function(){
+                            let updateData = openLabyrint(val, cData);
+                            if(updateData){
+                                updateACellDataWall(cData, updateData[0], updateData[1], updateData[2], false);
+                                updateTableFromData(cData, tableId);
+
+                                //rotate bd
+                                //alert(updateData[1]);
+                                bulldozer_.imgElem.src = bulldozerImgs_[(updateData[1]+1)%4];
+                                
+                            }
+
+                        //}, 500)
+                        //Move in bulldozer
+                        //let targetHtmlCell = document.getElementById(tableId).getElementsByTagName("td")[updateData[0]];
+                        moveToPosition(tableId, updateData[0]);
+                        
+                        //enable steering
+
+                    break;
+
+                }
+            }
+
+            function integerGate(val,min,max){
+                if(isInteger(val)){
+                    if(val>=min){
+                        if(val<=max){
+                            return true;
+                        }
+                    }
+                }
+                else{
+                    console.log("Not integer")
+                }
+                return false;
+            }
+
+            function isInteger(value) {
+                return !isNaN(value) && parseInt(Number(value)) === value;
+            }
+
+            function openLabyrint(pos, cData){
+                if(!isInteger(pos)){
+                    pos = 1;
+                    console.log("Wrong entry value, forcing 1");
+                }
+                let entryCellIndex = -1;
+                let wallToOpen = 0;
+                if(pos>0){
+                    if(pos <= size_*4){
+                        
+                        if(pos <= size_){
+                            //enter from north
+                            entryCellIndex = pos-1;
+                            wallToOpen = 1;
+                            
+                        }
+                        else if(pos <= size_*2){
+                            //east
+                            let yPos = pos - size_ - 1;
+                            entryCellIndex = cData.width * yPos + (cData.width-1);
+                            wallToOpen = 2;
+                        }
+                        else if(pos <= size_*3){
+                            //south
+                            let toSubtract = pos - size_*2 - 1;
+                            entryCellIndex = cData.cells.length - toSubtract - 1;
+                            wallToOpen = 3;
+                        }
+                        else{
+                            //west
+                            let yPos = size_*4 - pos;
+                            //alert("yPos " + yPos);
+                            entryCellIndex = cData.width * yPos;
+                            wallToOpen = 4;
+                        }
+                        //alert(entryCellIndex);
+                        let updateData = [entryCellIndex, wallToOpen, false];
+                        return updateData;
+                    }
+                    else{
+                        pos=1;
+                        console.log("Wrong entry value, forcing 1");
+                    }
+
+                }
+                else{
+                    console.error("Pos is to low, should be at least 1");
+                }
+                return false;
+            }
+
+            function updateTableFromData(cData, id){
+                let tbl = document.getElementById(id);
+
+                if(tbl == null){
+                    console.error("Could not find table #" + id);
+                    return;
+                }
+
+                let domCells = tbl.getElementsByTagName("td");
+
+                cData.cells.forEach((cell, index) => {
+                    //console.log(cell);
+                    let cl = domCells[index];
+                    cl.className = getClassNameFromData(cell);
+                });
+
+
+            }
+
+            function getClassNameFromData(cellData){
+                let className = "";
+                if(cellData.tw){
+                    className += "s0001";
+                }
+                if(cellData.rw){
+                    className += " s0010";
+                }
+                if(cellData.bw){
+                    className += " s0100";
+                }
+                if(cellData.lw){
+                    className += " s1000";
+                }
+
+                return className;
+            }
+
+            function moveToPosition(tableId, pos){
+                let targetHtmlCell = document.getElementById(tableId).getElementsByTagName("td")[pos];
+                moveToCell(targetHtmlCell);
+                bulldozer_.position = pos;
+
+                /*
+                if(document.getElementById("x")){
+                    document.getElementById("x").value = getXFromN(pos, size_);
+                    document.getElementById("y").value = getYFromN(pos, size_);
+                }*/
+
+                setTimeout(function(){
+
+                    if(document.getElementById("x")){
+                        document.getElementById("x").value = getXFromN(pos, size_);
+                        document.getElementById("y").value = getYFromN(pos, size_);
+                    }
+                }, 200);
+
+            }
+
+            function moveToCell(cell){
+                let rect = cell.getBoundingClientRect();
+
+                //console.log(rect);
+                setTimeout(function(){
+                    moveBulldozerTo(rect.x, rect.y);
+                },40);
+                
+            }
+
+            //posX, posY is px coords
+            function moveBulldozerTo(posX, posY){
+                console.log("moveBulldozerTov" + posX + " " + posY);
+
+                let bd = document.getElementById("bulldozer");
+                //console.log(bd);
+
+                //console.log(bd.style);
+
+                let bdx = parseInt(bd.offsetLeft);
+                let bdy = parseInt(bd.offsetTop);
+
+                //console.log(bdx + " " + bdy);
+
+                let arrived = false;
+
+                let xOff = -1, yOff = -1;
+
+
+                let corrX = parseInt(imgWidth_/2);
+                let corrY = parseInt(imgHeight_/2);
+
+                //console.log("corrX " + corrX);
+
+                xOff = parseInt(posX-(bdx));
+                yOff = parseInt(posY-(bdy));
+
+                //console.log("xOff : " + xOff + " yOff : " + yOff);
+
+                do{
+                    if(xOff > 0){
+                        bdx++;
+                    }
+                    else if(xOff < 0){
+                        bdx--;
+                    }
+
+                    bd.style.left = bdx + "px";
+
+                    xOff = parseInt(posX-(bdx));
+
+                    if(yOff > 0){
+                        bdy++;
+                    }
+                    else if(yOff < 0){
+                        bdy--;
+                    }
+
+                    bd.style.top = bdy + "px";
+
+                    yOff = parseInt(posY-(bdy));
+
+
+
+                    arrived = xOff==0 && yOff==0;
+
+                }while(!arrived)
+
+            }
+
+            function moveBulldozerUpStep(){
+
+                let bd = document.getElementById("bulldozer");
+
+                let bdx = parseInt(bd.offsetLeft);
+                let bdy = parseInt(bd.offsetTop);
+
+                let xOff = -1, yOff = -1;
+
+                //console.log("xOff : " + xOff + " yOff : " + yOff);
+                if(bdy > -200){
+                    bdy--;
+                }
+
+                //bad coding for the leaving-off effect
+                switch(bulldozer_.dir){
+                    case 1://up, is already going...
+                        break;
+                    case 2:
+                        bdx+=exitMove_;
+                        break;
+                    case 3:
+                        bdy+=exitMove_;
+                        break;
+                    case 4:
+                        bdx-=exitMove_;
+                }
+                if(exitMove_>0){
+                    exitMove_--;
+                }
+
+                bd.style.top = bdy + "px";
+                bd.style.left = bdx + "px";
+            }
+
+            function initControlPanel(cData, idCp, idLabyrint){
+                console.log("initcp")
+                let cp = document.getElementById(idCp);
+
+                let btns = cp.getElementsByTagName("button");
+
+                //console.log(btns);
+                //console.log(btns.length);
+                Array.from(btns).forEach(element => {
+                    //console.log(element);
+                    if(element.className == "navBtn"){
+                        element.addEventListener("click", function(e){
+                            let dir = parseInt(this.dataset.dir);
+                            bulldozer_.dir = dir;
+                            //cData, position, wall, value, checkNeighbour
+                            let wallMode = false;
+                            let alsoUpdate = updateACellDataWall(cData,bulldozer_.position,dir,wallMode,true);
+
+                            //rotate bd
+                            //console.log(dir);
+                            bulldozer_.imgElem.src = bulldozerImgs_[dir-1];
+
+                            if(alsoUpdate>0){
+                                let px = getXFromN(bulldozer_.position, cData.width);
+                                let py = getYFromN(bulldozer_.position, cData.width);
+
+                                console.log("Going from " + px + ":" + py);
+
+                                let newY = py;
+                                let newX = px;
+                                switch(alsoUpdate){
+                                    case 1:
+                                        newY = py-1;
+                                    break;
+                                    case 2:
+                                        newX = px+1;
+                                    break;
+                                    case 3:
+                                        newY = py+1;
+                                    break;
+                                    case 4:
+                                        newX = px-1;
+                                    break;
+                                    default: console.error("Error on alsoUpdate value, can be 1-4 to be used");
+
+                                }
+                            
+                            
+                            
+                                console.log("Also update x/y: " + (newX) + "/" + (newY));
+                            
+                                let newN = getNFromXY(newX, newY, cData.width);
+                                let test = circulateValue(1,4,dir,2);
+                                console.log("test: " + test);
+                                updateACellDataWall(cData, newN, test, wallMode, false);
+                                updateTableFromData(cData, idLabyrint);
+                                moveToPosition(idLabyrint, newN);
+                                bulldozer_.position = newN; 
+                            
+                            }
+                            else if(alsoUpdate == -1){
+                                //alert("aj");
+                                //TODO: make end of designing
+                                progress_++;
+                                progress(cData, idLabyrint);
+                                updateTableFromData(cData, idLabyrint);
+                                parkBulldozer(dir);
+                                clearControlPanel(idCp);
+                            }
+
+                        });
+                    }
+                });
+
+                /*
+                for(var i=0; i<btns.length; i++){
+                    console.log(btns[i]);
+                }
+                */
+            }
+
+            function clearControlPanel(idCp){
+                let cp = document.getElementById(idCp);
+
+                let btns = cp.getElementsByTagName("button");
+
+                //console.log(btns);
+                //console.log(btns.length);
+                Array.from(btns).forEach(element => {
+                        element.parentNode.removeChild(element);
+                    }
+                )
+            }
+
+            //exitDir direction when exiting
+            function parkBulldozer(exitDir){
+                console.log("park with direction: " + explainDir(exitDir));
+                exitMove_ = 20;
+                setInterval(moveBulldozerUpStep,10);
+                document.querySelector("#bulldozer").style.boxShadow= "10px 10px 17px 0px rgba(0,0,0,0.8)";
+				describeTable();
+            }
+
+
+            document.onkeydown = checkKey;
+
+            function checkKey(e) {
+
+                let navButtons = document.getElementsByClassName("navBtn");
+            
+                e = e || window.event;
+            
+                if (e.keyCode == 38) {
+                    // up arrow
+                    navButtons[0].click();
+                }
+                else if (e.keyCode == 39) {
+                   // right arrow
+                   navButtons[2].click();
+                }
+                else if (e.keyCode == 40) {
+                    // down arrow
+                    navButtons[3].click();
+                }
+                else if (e.keyCode == 37) {
+                   // left arrow
+                   navButtons[1].click();
+                }
+
+            
+            }
+
+            function explainDir(dir){
+                let text = "up";
+                if(dir==2) text = "right";
+                if(dir==3) text =  "down";
+                if (dir==4) text = "left"
+
+                return text;
+            }
+			
+			//to be able to save in text format
+			function describeTable(){
+				console.log("Describe labyrint");
+				//Introducing letters as values for walls value (0-no wall 1-top 2-right 4-bottom 8-left)
+				let letters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P'];
+				let laby = document.getElementById("labyrint");
+				let rows = laby.getElementsByTagName("tr");
+				let len = rows.length;
+				//console.log("Rows: " + len);
+				
+				//data
+				let data = {};
+				data.height = len;
+				let maxWidth = 0;
+				
+				data.cells = [];
+				
+				for(let i=0; i<len; i++){
+					let cells = rows[i].getElementsByTagName("td");
+					let len2 = cells.length;
+					//console.log("Row " + (i+1));
+					//console.log("Nr cells: " + len2);
+					
+					if(len2 > maxWidth) maxWidth = len2;
+					
+					for(let j=0; j<len2; j++){
+						let cell = cells[j];
+						//console.log(cell.className);
+					}
+				}
+				
+				data.width = maxWidth;
+				
+				//console.log(cellData);
+				let nrCells = cellData.cells.length;
+				for(let i=0; i<nrCells; i++){
+					data.cells.push(letters[getWallDescriptionNumber(cellData.cells[i])]);
+				}
+				console.log(data);
+				console.log(data.cells.join(""));
+				
+				
+				//cellData.cells.forEach((element) => console.log(getWallDescriptionNumber(element)));
+			}
+			
+			
+			function getWallDescriptionNumber(cellD){
+				let nr = 0;
+				if(cellD.tw) nr += 1;
+				if(cellD.rw) nr += 2;
+				if(cellD.bw) nr += 4;
+				if(cellD.lw) nr += 8;
+				return nr;
+			}
+			
+			function getWDNFromLetter(letter){
+				let letters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P'];
+				return letters.indexOf(letter);
+			}
+			
+            
+        </script>
+    </body>
+</html>
             *, *::before, *::after{
                 box-sizing: border-box;
             }
@@ -991,3 +2044,4 @@
         </script>
     </body>
 </html>
+

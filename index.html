@@ -63,16 +63,18 @@
                 font-family: 'Courier New', Courier, monospace;
                 font-weight: 700;
 				width:100%;
+                touch-action: manipulation;
             }
 
             #controlPanel input{
                 width:60px;
-
                 padding: 4px;
+                touch-action: manipulation;
             }
 
             #controlPanel td{
                 padding:5px;
+                touch-action: manipulation;
             }
 
             #controlPanel label{
@@ -124,6 +126,10 @@
                 }
 
                 
+            }
+
+            .disable-dbl-tap-zoom{
+                touch-action: manipulation;
             }
         </style>
     </head>
@@ -620,6 +626,7 @@
             function makeControlPanel(cData, tblId, labyrintId){
                 let panelTable = createTable(3,3);
                 panelTable.id = tblId;
+                //panelTable.className = "disable-dbl-tap-zoom";
                 let cells = panelTable.getElementsByTagName("td");
 
                 setTimeout(function(){
@@ -1113,7 +1120,6 @@
                 document.querySelector("#bulldozer").style.boxShadow= "10px 10px 17px 0px rgba(0,0,0,0.8)";
                 if(editMode){
                     let saveCode = describeTable();
-    				messageAdd("\n\nSave code:\n" + saveCode);
                     shareUrl(saveCode);
                 }
             }

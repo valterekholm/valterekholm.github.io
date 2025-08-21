@@ -203,7 +203,7 @@
                 initCellData(cellData, width, height, fourBitsOn);//setting to a default value 15 = 4 bits of "1"
 
                 if(newData){
-                    alert("Use new data!");//has size cData entrySpace
+                    //alert("Use new data!");//has size cData entrySpace
                 }
                 
                 //document.body.appendChild(t);
@@ -241,7 +241,7 @@
                     let updateData = openLabyrint(newData.entrySpace, cellData);
                     //get [entryCellIndex, wallToOpen, false]
                     if(updateData){
-                        updateACellDataWall(cellData, updateData[0], updateData[1], updateData[2], false);
+                        updateACellDataWallForMove(cellData, updateData[0], updateData[1], updateData[2], false);
                         updateTableFromData(cellData, t2.id);
                         //rotate bulld
                         //alert(updateData[1]);
@@ -361,13 +361,13 @@
             //Update values for a wall plus its neighbours
             //cData - the set of data for the table
             //position a 1-d position
-            //wall 1-top 2-right 3-bottom 4-left
+            //wall 1-top 2-right 3-bottom 4-left, which wall
             //value - wall true/false
             //checkNeighbour - if should follow this with a neighbour update
 
             //return 0 if no neighbour
             //if checkNeighbour, can return 1-4 for neighbour direction
-            function updateACellDataWall(cData, position, wall, value, checkNeighbour){
+            function updateACellDataWallForMove(cData, position, wall, value, checkNeighbour){
 
                 let posY = parseInt(position/cData.width);
                 let posX = position - posY*cData.width;
@@ -376,10 +376,10 @@
 
                 let ret = 0;
 
-                let wallsToNeighbours = 0;//bits for if neighbours are, from least significant, top,right... 
+                let wallsToNeighbours = 0;//bits for if neighbours are there, from least significant, top,right... 
 
-                let xOffset = 0, yOffset = 0;
-                if(posX < cData.width){
+                let xOffset = 0, yOffset = 0; //avstånd från högervägg, botten
+                if(posX < cData.width){ // om pos-x är mindre än bredd på planen
                     xOffset = cData.width - posX;
                     if(posY < cData.height){
                         yOffset = cData.height - posY;
@@ -424,16 +424,15 @@
                 console.log("wallsToNeighbours: " + wallsToNeighbours)
 
                 //check wall
-                let wallBit = 1 << (wall-1);
+                let wallBit = 1 << (wall-1); //top:0001, right:0010, bottom:0100
                 console.log("Wall Bit " + wallBit);
 
-                let relatedNeighbour = (wallsToNeighbours & wallBit);
+                let relatedNeighbour = (wallsToNeighbours & wallBit);//define destination neighbour
 
                 let relNeiBit = 0;
 
-                if(relatedNeighbour > 0){ +
+                if(relatedNeighbour > 0){
                     console.log("relatedNeighbour: " + relatedNeighbour);
-
                     relNeiBit = countBitPosition(relatedNeighbour);
                 }
                 else{
@@ -441,7 +440,6 @@
                     relNeiBit = -1;
                 }
 
-                //console.log("<<< WILL SET WALL " + wall + " TO " + value + " >>>");
 
                 switch(wall){
                     case 1:
@@ -467,6 +465,60 @@
                 else{
                     return 0;
                 }
+            }
+
+            function checkDirectionForGuest(cData, position, dir){
+                console.log("checkDirectionForGuest, direction: " + dir);
+                let posY = parseInt(position/cData.width);
+                let posX = position - posY*cData.width;
+
+                let currentCell = cData.cells[position];
+                console.log(currentCell);
+
+                let canMove = true;
+
+                switch (dir){
+                    case 1:
+                        if(currentCell.tw){
+                            canMove = false;
+                        }
+                        break;
+                    case 2:
+                        if(currentCell.rw){
+                            canMove = false;
+                        }
+                        break;
+                    case 3:
+                        if(currentCell.bw){
+                            canMove = false;
+                        }
+                        break;
+                    case 4:
+                        if(currentCell.lw){
+                            canMove = false;
+                        }
+                        break;
+                    default:
+                        console.error("Faulty dir value: " + dir);
+
+                }
+                return canMove;
+            }
+
+            //get info about any board border close by
+            function getBorderDir(cData, position, dir){
+                let posY = parseInt(position/cData.width);
+                let posX = position - posY*cData.width;
+
+                if(dir == 1 || dir == 3){//moving up/down
+                    if(posY == 0) return 1;
+                    if(posY == cData.height-1) return 3;
+                }
+                else{//moving/going left/right
+                    if(posX == 0) return 4;
+                    if(posX == cData.width-1) return 2;
+                }
+                return 0;
             }
 
             function createTableFromData(cData, id){
@@ -674,7 +726,7 @@
                         //open labyrint
                         let updateData = openLabyrint(val, cData);
                         if(updateData){
-                            updateACellDataWall(cData, updateData[0], updateData[1], updateData[2], false);
+                            updateACellDataWallForMove(cData, updateData[0], updateData[1], updateData[2], false);
                             updateTableFromData(cData, tableId);
 
                             //rotate bulld
@@ -935,62 +987,100 @@
                         element.addEventListener("click", function(e){
                             let dir = parseInt(this.dataset.dir);
                             bulldozer_.dir = dir;
-                            //cData, position, wall, value, checkNeighbour
-                            let wallMode = false;
-                            let alsoUpdate = updateACellDataWall(cData,bulldozer_.position,dir,wallMode,true);
-
-                            //rotate bd
-                            //console.log(dir);
                             bulldozer_.imgElem.src = bulldozerImgs_[dir-1];
+                            //TODO: make "guest mode" work (!editMode)
+                            if(editMode){
+                                //cData, position, wall, value, checkNeighbour
+                                let wallMode = false;
+                                let alsoUpdate = updateACellDataWallForMove(cData,bulldozer_.position,dir,wallMode,true);
 
-                            if(alsoUpdate>0){
+                                //rotate bd
+                                //console.log(dir);
+                                
+
+                                if(alsoUpdate>0){
+                                    let px = getXFromN(bulldozer_.position, cData.width);
+                                    let py = getYFromN(bulldozer_.position, cData.width);
+
+                                    console.log("Going from " + px + ":" + py);
+
+                                    let newY = py;
+                                    let newX = px;
+                                    switch(alsoUpdate){
+                                        case 1:
+                                            newY--;
+                                        break;
+                                        case 2:
+                                            newX++;
+                                        break;
+                                        case 3:
+                                            newY++;
+                                        break;
+                                        case 4:
+                                            newX--;
+                                        break;
+                                        default: console.error("Error on alsoUpdate value, can be 1-4 to be used");
+
+                                    }
+                                
+                                
+                                
+                                    console.log("Also update x/y: " + (newX) + "/" + (newY));
+                                
+                                    let newN = getNFromXY(newX, newY, cData.width);
+                                    let test = circulateValue(1,4,dir,2);
+                                    //console.log("test: " + test);
+                                    updateACellDataWallForMove(cData, newN, test, wallMode, false);
+                                    updateTableFromData(cData, idLabyrint);
+                                    moveToPosition(idLabyrint, newN);
+                                    bulldozer_.position = newN;
+                                }
+                                else if(alsoUpdate == -1){
+                                    //alert("going out");
+                                    //TODO: make end of designing
+                                    progress_++;
+                                    progress(cData, idLabyrint);
+                                    updateTableFromData(cData, idLabyrint);
+                                    parkBulldozer(dir);
+                                    clearControlPanel(idCp);
+                                }
+                            }//if editMode
+                            else{
+                                let canMove = checkDirectionForGuest(cData,bulldozer_.position,dir);
+                                console.log("canMove: " + canMove);
+                                let borderDir = getBorderDir(cData,bulldozer_.position, dir);
+
+
                                 let px = getXFromN(bulldozer_.position, cData.width);
                                 let py = getYFromN(bulldozer_.position, cData.width);
 
-                                console.log("Going from " + px + ":" + py);
-
-                                let newY = py;
                                 let newX = px;
-                                switch(alsoUpdate){
-                                    case 1:
-                                        newY = py-1;
-                                    break;
-                                    case 2:
-                                        newX = px+1;
-                                    break;
-                                    case 3:
-                                        newY = py+1;
-                                    break;
-                                    case 4:
-                                        newX = px-1;
-                                    break;
-                                    default: console.error("Error on alsoUpdate value, can be 1-4 to be used");
+                                let newY = py;
+                                if(canMove){
+                                    if(borderDir != dir){
+                                        console.log("moving within labyrint...");
+                                        switch(dir){
+                                            case 1: newY--;
+                                            break;
+                                            case 2: newX++;
+                                            break;
+                                            case 3: newY++;
+                                            break;
+                                            case 4: newX--;
+                                            break;
+                                            default: console.log("faulty dir: " + dir);
+                                        }
 
+                                        let newN = getNFromXY(newX, newY, cData.width);
+                                        moveToPosition(idLabyrint, newN);
+                                        bulldozer_.position = newN;
+                                    }
+                                    else{
+                                        parkBulldozer(dir);
+                                        clearControlPanel(idCp);
+                                    }
                                 }
-                            
-                            
-                            
-                                console.log("Also update x/y: " + (newX) + "/" + (newY));
-                            
-                                let newN = getNFromXY(newX, newY, cData.width);
-                                let test = circulateValue(1,4,dir,2);
-                                //console.log("test: " + test);
-                                updateACellDataWall(cData, newN, test, wallMode, false);
-                                updateTableFromData(cData, idLabyrint);
-                                moveToPosition(idLabyrint, newN);
-                                bulldozer_.position = newN; 
-                            
                             }
-                            else if(alsoUpdate == -1){
-                                //alert("going out");
-                                //TODO: make end of designing
-                                progress_++;
-                                progress(cData, idLabyrint);
-                                updateTableFromData(cData, idLabyrint);
-                                parkBulldozer(dir);
-                                clearControlPanel(idCp);
-                            }
-
                         });
                     }
                 });

@@ -17,7 +17,7 @@
                 margin: 0;
                 padding: 10px;
                 border-spacing: 1px;
-                float: left;
+                float: none;
             }
             td{
                 border-style: solid;
@@ -28,13 +28,13 @@
                 padding: 4px;
             }
             textarea{
-                font-size: 19px;
+                font-size: 2rem;/*19px;*/
                 font-family: 'Courier New', Courier, monospace;
                 font-weight: 700;
                 width: 100%;
             }
             h2{
-                font-size: 19px;
+                font-size: 2rem;
                 font-family: 'Courier New', Courier, monospace;
                 font-weight: 700;
             }
@@ -197,13 +197,24 @@
             let tableWidthPx = 400; //TODO: maybe adjust in runtime
 
             bulldozerImgs_ = ["bulldozer-U.jpg", "bulldozer-R.jpg", "bulldozer-D.jpg", "bulldozer-L.jpg"];
+            //preload
+            bulldozer_.imgElem.src = bulldozerImgs_[0];
+            bulldozer_.imgElem.src = bulldozerImgs_[2];
+            bulldozer_.imgElem.src = bulldozerImgs_[3];
+
+
 
             exitMove_ = 0;
 
             editMode = true;
 
+            resizeCount = 0;
+
             window.onload = function(){
                 console.log("Hej, urlDataOk: " + urlDataOk);
+
+                windowWidth = (window.visualViewport.width);
+                windowHeight = (window.visualViewport.height);
 
                 let t = createTable(width, height);
                 initCellData(cellData, width, height, fourBitsOn);//setting to a default value 15 = 4 bits of "1"
@@ -269,6 +280,33 @@
                 if(!urlDataOk)
                 progress_++;
                 progress(cellData, t2.id);
+
+
+                if(windowHeight > windowWidth){
+                setInterval(function(){
+
+                    // 
+                    let labyr = document.querySelector("#labyrint");
+                    let allTds = labyr.getElementsByTagName("td");
+                    let cellWidth = allTds[0].getBoundingClientRect().width;
+                    let wantedWidth = windowWidth-10;
+                    if(cellData.width * cellWidth < wantedWidth && resizeCount<5){
+                        let diff = windowWidth - (cellData.width * cellWidth);
+                        let newSize = cellWidth+parseInt(diff/10);
+                        let bullDSize = newSize-6;
+                        let style = document.createElement("style");
+                        style.innerHTML = "#labyrint td{ width:"+newSize+"px; height:"+newSize+"px}";
+                        document.head.appendChild(style);
+                        moveToPosition(idLabyrint, bulldozer_.position);
+                        document.querySelector("#bulldozer").style.width=bullDSize+"px";
+                        document.querySelector("#bulldozer").style.height=bullDSize+"px";
+                        resizeCount++;
+                    }                    
+                }, 20);
+            }
+            else{
+                document.querySelector("#labyrint").style.float="left";
+            }
             }
 
             function createTable(w, h){
@@ -675,10 +713,14 @@
                 messageBox.rows = 5;
                 messageBox.disabled = true;
                 sheet.appendChild(messageBox);
-                addGlobalCss("\n\ndiv#" + id + "{width:260px; height:400px; background: #eed; float:right; padding:15px}");
-                
-                return sheet;
 
+                let dWidth = "auto";
+                let dHeight = "auto";
+                addGlobalCss("\n\ndiv#" + id + "{width:"+dWidth+"; height:"+dHeight+"; background: #eed; padding:15px; }");
+                if(windowWidth > windowHeight){
+                    addGlobalCss("\n\ndiv#" + id + "{float:right;  display:inline-block}");
+                }
+                return sheet;
             }
 
             function addGlobalCss(toAdd){
@@ -955,8 +997,8 @@
                 let xOff = -1, yOff = -1;
 
                 //console.log("xOff : " + xOff + " yOff : " + yOff);
-                if(bdy > -200){
-                    bdy--;
+                if(bdy > -400){
+                    bdy-=2;
                 }
 
                 //bad coding for the leaving-off effect
@@ -1116,6 +1158,7 @@
             function parkBulldozer(exitDir){
                 console.log("park with direction: " + explainDir(exitDir));
                 exitMove_ = 20;
+                //TODO: assign interval to clear it later
                 setInterval(moveBulldozerUpStep,10);
                 document.querySelector("#bulldozer").style.boxShadow= "10px 10px 17px 0px rgba(0,0,0,0.8)";
                 if(editMode){
@@ -1130,30 +1173,33 @@
             function checkKey(e) {
 
                 let navButtons = document.getElementsByClassName("navBtn");
+                let have = navButtons.length > 0;
             
                 e = e || window.event;
                 //console.log(e.keyCode);
             
-                if (e.keyCode == 38) {
-                    // up arrow
-                    navButtons[0].click();
-                }
-                else if (e.keyCode == 39) {
-                   // right arrow
-                   navButtons[2].click();
-                }
-                else if (e.keyCode == 40) {
-                    // down arrow
-                    navButtons[3].click();
-                }
-                else if (e.keyCode == 37) {
-                   // left arrow
-                   navButtons[1].click();
-                }
-                else if(e.keyCode == 69){
-                    editMode = !editMode;
-                    //TODO:
-                    //if !editMode then prevent bulld from breaking walls
+                if(have){
+                    if (e.keyCode == 38) {
+                        // up arrow
+                        navButtons[0].click();
+                    }
+                    else if (e.keyCode == 39) {
+                       // right arrow
+                       navButtons[2].click();
+                    }
+                    else if (e.keyCode == 40) {
+                        // down arrow
+                        navButtons[3].click();
+                    }
+                    else if (e.keyCode == 37) {
+                       // left arrow
+                       navButtons[1].click();
+                    }
+                    else if(e.keyCode == 69){
+                        editMode = !editMode;
+                        //TODO:
+                        //if !editMode then prevent bulld from breaking walls
+                    }
                 }
             }
 

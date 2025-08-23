@@ -42,16 +42,16 @@
                 border: 0px solid #444;
             }
             .s0001{
-                border-top-width: 2px;
+                border-top-width: 3px;
             }
             .s0010{
-                border-right-width: 2px;
+                border-right-width: 3px;
             }
             .s0100{
-                border-bottom-width: 2px;
+                border-bottom-width: 3px;
             }
             .s1000{
-                border-left-width: 2px;
+                border-left-width: 3px;
             }
 
             #controlPanel{
@@ -84,6 +84,7 @@
             .navBtn{
                 padding:10px 32%;
                 font-size: 30px;
+                border-radius: 10px;
             }
 
             #bulldozer{
@@ -676,7 +677,9 @@
 
                     //console.log(tds);
 
-                    let symbols = ['','^','','<', '', '>','','v',''];
+                    let symbols = ['','&#x25b2;','','&#x25c4;', '', '&#x25ba;','','&#x25bc;',''];
+                    //'','&#x1403;','','&#x140a;', '', '&#x1405;','','&#x1401;',''
+                    //['','^','','<', '', '>','','v',''];
                     let dirs = [1,4,2,3];
                     let btns = [];
                     for(let i=0; i<tds.length; i++){
@@ -922,7 +925,7 @@
 
                 //console.log(rect);
                 setTimeout(function(){
-                    moveBulldozerTo(rect.x, rect.y);
+                    moveBulldozerTo(rect.x+2, rect.y+2);
                 },40);
                 
             }

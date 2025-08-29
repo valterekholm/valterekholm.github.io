@@ -91,6 +91,11 @@
                 position: absolute;
                 top: 0px;
                 left: 0px;
+                opacity:1;
+                transition: opacity 1s;
+            }
+            #bulldozer.hidden{
+                opacity:0;
             }
 
             #bulldozer img{
@@ -126,16 +131,98 @@
                     font-size: 30px;
                 }
 
+                div#entryForm h1{
+                    font-size: 2.5em;
+                }
+                #inputSize, #inputStart{
+                    width:200px;
+                }
                 
             }
 
             .disable-dbl-tap-zoom{
                 touch-action: manipulation;
             }
+
+            div#entryForm{
+                position: absolute;
+                left:0;
+                right:0;
+                width: fit-content;
+                background-color: rgba(255,255,255,.99);
+                border:10px solid rgba(130,100,100,.7);
+                border-radius: 20px;
+                padding: 30px;
+                font-family: 'Courier New', Courier, monospace;
+                margin-inline: auto;
+                opacity: 1;
+            }
+
+            div#entryForm.hidden{
+                opacity:0;
+                left:-1000px;
+                width: 0;
+            }
+
+            div#entryForm img{
+                width:190px;
+                margin:30px auto;
+                display: block;
+                border-radius: 10px;
+            }
+            #entryForm input[type="number"]{
+                width:50px;
+                font-size: 1.5em;
+            }
+            #entryForm button{
+                font-size: 2em;
+                padding:10px;
+                margin:20px auto;
+                display: block;
+            }
+            #inputSize, #inputStart{
+                width:200px;
+                vertical-align: -4px;
+            }
+            .slider::-webkit-slider-thumb {
+                width: 20px;
+                height: 30px;
+                background: #f00;
+                cursor: pointer;
+                border: 5px solid #000;
+                border-radius: 4px;
+            }
+
+            /* for firefox */
+            .slider::-moz-range-thumb {
+                width: 20px;
+                height: 30px;
+                background: #f00;
+                cursor: pointer;
+                border: 5px solid #000;
+                border-radius: 4px;
+            }
         </style>
     </head>
     <body>
-        <div id="bulldozer"><img src="bulldozer-R.jpg" alt="Bulldozer" id="img1"></div>
+        <div id="bulldozer" class="hidden"><img src="bulldozer-R.jpg" alt="Bulldozer" id="img1"></div>
+        <div id="entryForm" class="hidden">
+
+            <h1>Hello, let's make a labyrint</h1>
+            <div>
+                <label for="inputSize">Choose size:</label>
+                <input type="range" min="3" max="20" id="inputSize" value="3">
+                <input type="number" readonly id="displayInputSize" value="3";>
+            </div>
+            <br>
+            <div>
+                <label for="inputStart">Choose entry</label>
+                <input type="range" min="1" max="12" id="inputStart" value="1">
+                <input type="number" readonly id="displayInputStart" value="1">
+                <button id="makeFromInputs">Make</button>
+            </div>
+            <img src="Bulldozer.jpg">
+        </div>
         <script>
             const fourBitsOn = 15;
             size_ = 4;
@@ -145,7 +232,8 @@
             imgHeight_ = 0; //for bulldozer
             bulldozer_ = {};
             bulldozer_.imgElem = document.getElementById("img1");
-
+            t2 = null;
+            idLabyrint = "labyrint";
 
             let urlDataOk = false;
             let newData = false;
@@ -165,7 +253,7 @@
                 //if arg1 is ok (check)
                 urlDataOk = argCheck(arg1);
                 if(urlDataOk){
-                    newData = argData(arg1);
+                    newData = argData(arg1);//int letters int
                     console.log(newData);
                     progress_++;
                 //then draw labyrint from arg1
@@ -179,11 +267,13 @@
 
             let val = "x";
             if(!urlDataOk){
-                do{
-                    val = parseInt(prompt("Please enter a size for the labyrint (3-20)"));
-                }while(!integerGate(val,3, 20));
+//                do{
+//                    val = parseInt(prompt("Please enter a size for the labyrint (3-20)"));
+//                }while(!integerGate(val,3, 20));
+//                size_ = val;
 
-                size_ = val;
+                //show entry form
+                document.querySelector("#entryForm").className="";
             }
             else{
                 console.log(urlDataOk);
@@ -192,7 +282,7 @@
                 size_ = newData.size_;
             }
 
-            let width = size_, height = size_;
+//            let width = size_, height = size_;
             cellData = {};
 
             let tableWidthPx = 400; //TODO: maybe adjust in runtime
@@ -203,6 +293,7 @@
             bulldozer_.imgElem.src = bulldozerImgs_[2];
             bulldozer_.imgElem.src = bulldozerImgs_[3];
 
+            
 
 
             exitMove_ = 0;
@@ -217,34 +308,43 @@
                 windowWidth = (window.visualViewport.width);
                 windowHeight = (window.visualViewport.height);
 
-                let t = createTable(width, height);
-                initCellData(cellData, width, height, fourBitsOn);//setting to a default value 15 = 4 bits of "1"
+
 
                 if(newData){
+                    //TODO: copy to cellData
+                    cellData.width = newData.size_;
+                    cellData.height = newData.size_;
+                    editMode = false;
+                    //use supplied values
+
+                    cellData.width = newData.size_;
+                    cellData.height = newData.size_;
+                    //take cell data (walls data)
+                    console.log("newData cells...");
+                    cellData.cells = []; //clear array
+                    newData.cData.split("").forEach(cell => {
+                        console.log(cell);
+                        let temp = getCellDataFromWDN(getWDNFromLetter(cell));
+                        cellData.cells.push(temp);
+                    });
                     //alert("Use new data!");//has size cData entrySpace
+                    t2 = createTableFromData(cellData, idLabyrint);
+                    document.body.insertBefore(t2,document.querySelector("#entryForm"));
+                    document.querySelector("#bulldozer").className = "";
                 }
                 
-                //document.body.appendChild(t);
+                //document.body.appendChild(t); 
 
                 let cs = document.getElementsByTagName("td");
 
-                //TODO: remove?
-                    for(let i=0; i<cs.length; i++){
-                        //setCellMode(cs[i], 15);
-                    }
-
-
-                let c = t.firstElementChild.firstElementChild;
-
+                //let c = t.firstElementChild.firstElementChild;
 
                 //alsoUpdate values: 1=up, 2=right, 3=down, 4=left
                 let position = 0;
                 let wall = 2;
                 let wallMode = false;
                 let alsoUpdate = false;
-                let idLabyrint = "labyrint";
-                let t2 = createTableFromData(cellData, idLabyrint);
-                document.body.appendChild(t2);
+
 
                 let idControlPanel = "controlPanel";
 
@@ -253,11 +353,15 @@
 
 
                 if(urlDataOk){
-                    editMode = false;
-                    //use supplied values
+
+                    //updateTableFromData(cellData, t2.id);
+                    console.log("urlDataOk");
+
+
                     //To open
                     let updateData = openLabyrint(newData.entrySpace, cellData);
                     //get [entryCellIndex, wallToOpen, false]
+                    console.log("updateData: " + updateData);
                     if(updateData){
                         updateACellDataWallForMove(cellData, updateData[0], updateData[1], updateData[2], false);
                         updateTableFromData(cellData, t2.id);
@@ -267,20 +371,13 @@
                     }
                     moveToPosition(t2.id, updateData[0]);
 
-                    //take cell data (walls data)
-                    console.log("newData cells...");
-                    cellData.cells = []; //clear array
-                    newData.cData.split("").forEach(cell => {
-                        console.log(cell);
-                        let temp = getCellDataFromWDN(getWDNFromLetter(cell));
-                        cellData.cells.push(temp);
-                    });
-                    updateTableFromData(cellData, t2.id);
+
+
+                    progress(cellData, t2.id);
+                    if(!urlDataOk)
+                        progress_++;
+                    progress(cellData, t2.id);
                 }
-                progress(cellData, t2.id);
-                if(!urlDataOk)
-                progress_++;
-                progress(cellData, t2.id);
 
 
                 if(windowHeight > windowWidth){
@@ -288,9 +385,11 @@
 
                     // 
                     let labyr = document.querySelector("#labyrint");
+                    if(labyr == null) return;
                     let allTds = labyr.getElementsByTagName("td");
                     let cellWidth = allTds[0].getBoundingClientRect().width;
                     let wantedWidth = windowWidth-10;
+                    //make labyrint bigger
                     if(cellData.width * cellWidth < wantedWidth && resizeCount<5){
                         let diff = windowWidth - (cellData.width * cellWidth);
                         let newSize = cellWidth+parseInt(diff/10);
@@ -306,8 +405,41 @@
                 }, 20);
             }
             else{
-                document.querySelector("#labyrint").style.float="left";
+                //document.querySelector("#labyrint").style.float="left";
             }
+
+
+
+            document.querySelector("#inputSize").addEventListener("input", function(e){
+                console.log(e);
+                console.log(this.value);
+                document.querySelector("#displayInputSize").value = this.value;
+                let inpSt = document.querySelector("#inputStart");
+                inpSt.max = parseInt(this.value*4);
+                console.log(inpSt.value + " : " + inpSt.max);
+                document.querySelector("#displayInputStart").value = inpSt.value;
+            });
+
+            document.querySelector("#inputStart").addEventListener("input", function(e){
+                document.querySelector("#displayInputStart").value = this.value;
+            });
+
+            document.querySelector("#makeFromInputs").addEventListener("click", function(e){
+                size_ = parseInt(document.querySelector("#inputSize").value);
+                let width = size_, height = size_;
+                t = createTable(width, height);
+                initCellData(cellData, width, height, fourBitsOn);//setting to a default value 15 = 4 bits of "1"
+                t2 = createTableFromData(cellData, idLabyrint);
+                document.body.insertBefore(t2,document.querySelector("#entryForm"));  //appendChild(t2);
+                progress(cellData, t2.id);
+                progress_++;
+                progress(cellData, t2.id);
+                document.querySelector("#entryForm").style.display = "none";
+
+                if(windowHeight < windowWidth){
+                    t2.style.float = "left";
+                }
+            });
             }
 
             function createTable(w, h){
@@ -375,6 +507,7 @@
                 return cd;
             }
 
+            //to make a table with no paths
             function initCellData(cData, width, height, defaultValue){
                 cData.cells = [];
                 cData.width = width;
@@ -389,7 +522,7 @@
 
             //Update values for all walls
             //d is an int whose 4 least significant bits are values of walls, up, right, down, left
-            function updateACellData(cData, position, d){
+            /*function updateACellData(cData, position, d){
 
                 let b0 = (d&1) != 0; // have an upper wall
                 let b1 = (d&2) != 0; // have an right wall
@@ -401,7 +534,7 @@
                 cData.cells[position].bw = b2;
                 cData.cells[position].lw = b3;
                 
-            }
+            }*/
 
             //Update values for a wall plus its neighbours
             //cData - the set of data for the table
@@ -413,6 +546,14 @@
             //return 0 if no neighbour
             //if checkNeighbour, can return 1-4 for neighbour direction
             function updateACellDataWallForMove(cData, position, wall, value, checkNeighbour){
+
+                console.log("updateACellDataWallForMove");
+                console.log(cData);
+                console.log(position);
+                console.log(wall);
+                console.log(value);
+                console.log(checkNeighbour);
+
 
                 let posY = parseInt(position/cData.width);
                 let posX = position - posY*cData.width;
@@ -767,10 +908,7 @@
 
                 switch(progress_){
                     case 0:
-                        let val = "x";
-                        do{
-                            val = parseInt(prompt(msg[progress_]));
-                        }while(!integerGate(val,1, (size_*4)))
+                        let val = parseInt(document.querySelector("#inputStart").value);
 
                         message("Entry space is ok");
                         cData.entrySpace = val;
@@ -789,6 +927,8 @@
                         //Move in bulldozer
                         //let targetHtmlCell = document.getElementById(tableId).getElementsByTagName("td")[updateData[0]];
                         moveToPosition(tableId, updateData[0]);
+
+                        document.querySelector("#bulldozer").className ="";
                     break;
                 }
             }
@@ -1377,6 +1517,21 @@
                     console.error("error arg parts length");
                     return false;
                 }
+            }
+            function handleInputSize(e){
+                console.log(e);
+            }
+            function handleInputStart(e){
+                console.log(e);
+            }
+            function makeNewRange(id, min, max, val){
+                let newE = document.createElement("input");
+                newE.type = "range";
+                newE.min = min;
+                newE.max = max;
+                newE.value = val;
+                newE.id = id;
+                return newE;
             }
         </script>
     </body>

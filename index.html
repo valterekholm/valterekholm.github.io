@@ -91,6 +91,11 @@
                 position: absolute;
                 top: 0px;
                 left: 0px;
+                opacity:1;
+                transition: opacity 1s;
+            }
+            #bulldozer.hidden{
+                opacity:0;
             }
 
             #bulldozer img{
@@ -126,6 +131,12 @@
                     font-size: 30px;
                 }
 
+                div#entryForm h1{
+                    font-size: 2.5em;
+                }
+                #inputSize, #inputStart{
+                    width:200px;
+                }
                 
             }
 
@@ -138,7 +149,6 @@
                 left:0;
                 right:0;
                 width: fit-content;
-                height: 70%;
                 background-color: rgba(255,255,255,.99);
                 border:10px solid rgba(130,100,100,.7);
                 border-radius: 20px;
@@ -153,10 +163,42 @@
                 display: block;
                 border-radius: 10px;
             }
+            #entryForm input[type="number"]{
+                width:50px;
+                font-size: 1.5em;
+            }
+            #entryForm button{
+                font-size: 2em;
+                padding:10px;
+                margin:20px auto;
+                display: block;
+            }
+            #inputSize, #inputStart{
+                width:200px;
+                vertical-align: -4px;
+            }
+            .slider::-webkit-slider-thumb {
+                width: 20px;
+                height: 30px;
+                background: #f00;
+                cursor: pointer;
+                border: 5px solid #000;
+                border-radius: 4px;
+            }
+
+            /* for firefox */
+            .slider::-moz-range-thumb {
+                width: 20px;
+                height: 30px;
+                background: #f00;
+                cursor: pointer;
+                border: 5px solid #000;
+                border-radius: 4px;
+            }
         </style>
     </head>
     <body>
-        <div id="bulldozer"><img src="bulldozer-R.jpg" alt="Bulldozer" id="img1"></div>
+        <div id="bulldozer" class="hidden"><img src="bulldozer-R.jpg" alt="Bulldozer" id="img1"></div>
         <div id="entryForm">
 
             <h1>Hello, let's make a labyrint</h1>
@@ -851,6 +893,8 @@
                         //Move in bulldozer
                         //let targetHtmlCell = document.getElementById(tableId).getElementsByTagName("td")[updateData[0]];
                         moveToPosition(tableId, updateData[0]);
+
+                        document.querySelector("#bulldozer").className ="";
                     break;
                 }
             }
@@ -1457,4 +1501,5 @@
             }
         </script>
     </body>
+<!--edited 20250829-->
 </html>

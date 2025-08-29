@@ -91,11 +91,6 @@
                 position: absolute;
                 top: 0px;
                 left: 0px;
-                opacity:1;
-                transition: opacity 1s;
-            }
-            #bulldozer.hidden{
-                opacity:0;
             }
 
             #bulldozer img{
@@ -131,91 +126,16 @@
                     font-size: 30px;
                 }
 
-                div#entryForm h1{
-                    font-size: 2.5em;
-                }
-                #inputSize, #inputStart{
-                    width:200px;
-                }
                 
             }
 
             .disable-dbl-tap-zoom{
                 touch-action: manipulation;
             }
-
-            div#entryForm{
-                position: absolute;
-                left:0;
-                right:0;
-                width: fit-content;
-                background-color: rgba(255,255,255,.99);
-                border:10px solid rgba(130,100,100,.7);
-                border-radius: 20px;
-                padding: 30px;
-                font-family: 'Courier New', Courier, monospace;
-                margin-inline: auto;
-            }
-
-            div#entryForm img{
-                width:190px;
-                margin:30px auto;
-                display: block;
-                border-radius: 10px;
-            }
-            #entryForm input[type="number"]{
-                width:50px;
-                font-size: 1.5em;
-            }
-            #entryForm button{
-                font-size: 2em;
-                padding:10px;
-                margin:20px auto;
-                display: block;
-            }
-            #inputSize, #inputStart{
-                width:200px;
-                vertical-align: -4px;
-            }
-            .slider::-webkit-slider-thumb {
-                width: 20px;
-                height: 30px;
-                background: #f00;
-                cursor: pointer;
-                border: 5px solid #000;
-                border-radius: 4px;
-            }
-
-            /* for firefox */
-            .slider::-moz-range-thumb {
-                width: 20px;
-                height: 30px;
-                background: #f00;
-                cursor: pointer;
-                border: 5px solid #000;
-                border-radius: 4px;
-            }
         </style>
     </head>
     <body>
-        <div id="bulldozer" class="hidden"><img src="bulldozer-R.jpg" alt="Bulldozer" id="img1"></div>
-        <div id="entryForm">
-
-            <h1>Hello, let's make a labyrint</h1>
-            <div>
-                <label for="inputSize">Choose size:</label>
-                <input type="range" min="3" max="20" id="inputSize" value="3">
-                <input type="number" readonly id="displayInputSize" value="3";>
-            </div>
-            <br>
-            <div>
-                <label for="inputStart">Choose entry</label>
-                <input type="range" min="1" max="12" id="inputStart" value="1">
-                <input type="number" readonly id="displayInputStart" value="1">
-                <button id="makeFromInputs">Make</button>
-            </div>
-            <img src="Bulldozer.jpg">
-        </div>
+        <div id="bulldozer"><img src="bulldozer-R.jpg" alt="Bulldozer" id="img1"></div>
         <script>
             const fourBitsOn = 15;
             size_ = 4;
@@ -259,10 +179,11 @@
 
             let val = "x";
             if(!urlDataOk){
-//                do{
-//                    val = parseInt(prompt("Please enter a size for the labyrint (3-20)"));
-//                }while(!integerGate(val,3, 20));
-//                size_ = val;
+                do{
+                    val = parseInt(prompt("Please enter a size for the labyrint (3-20)"));
+                }while(!integerGate(val,3, 20));
+
+                size_ = val;
             }
             else{
                 console.log(urlDataOk);
@@ -271,7 +192,7 @@
                 size_ = newData.size_;
             }
 
-//            let width = size_, height = size_;
+            let width = size_, height = size_;
             cellData = {};
 
             let tableWidthPx = 400; //TODO: maybe adjust in runtime
@@ -282,7 +203,6 @@
             bulldozer_.imgElem.src = bulldozerImgs_[2];
             bulldozer_.imgElem.src = bulldozerImgs_[3];
 
-            
 
 
             exitMove_ = 0;
@@ -297,17 +217,25 @@
                 windowWidth = (window.visualViewport.width);
                 windowHeight = (window.visualViewport.height);
 
-
+                let t = createTable(width, height);
+                initCellData(cellData, width, height, fourBitsOn);//setting to a default value 15 = 4 bits of "1"
 
                 if(newData){
                     //alert("Use new data!");//has size cData entrySpace
                 }
                 
-                //document.body.appendChild(t); 
+                //document.body.appendChild(t);
 
                 let cs = document.getElementsByTagName("td");
 
-                //let c = t.firstElementChild.firstElementChild;
+                //TODO: remove?
+                    for(let i=0; i<cs.length; i++){
+                        //setCellMode(cs[i], 15);
+                    }
+
+
+                let c = t.firstElementChild.firstElementChild;
+
 
                 //alsoUpdate values: 1=up, 2=right, 3=down, 4=left
                 let position = 0;
@@ -315,7 +243,8 @@
                 let wallMode = false;
                 let alsoUpdate = false;
                 let idLabyrint = "labyrint";
-
+                let t2 = createTableFromData(cellData, idLabyrint);
+                document.body.appendChild(t2);
 
                 let idControlPanel = "controlPanel";
 
@@ -347,13 +276,11 @@
                         cellData.cells.push(temp);
                     });
                     updateTableFromData(cellData, t2.id);
-
-                    progress(cellData, t2.id);
-                    if(!urlDataOk)
-                        progress_++;
-                    progress(cellData, t2.id);
                 }
-
+                progress(cellData, t2.id);
+                if(!urlDataOk)
+                progress_++;
+                progress(cellData, t2.id);
 
 
                 if(windowHeight > windowWidth){
@@ -361,7 +288,6 @@
 
                     // 
                     let labyr = document.querySelector("#labyrint");
-                    if(labyr == null) return;
                     let allTds = labyr.getElementsByTagName("td");
                     let cellWidth = allTds[0].getBoundingClientRect().width;
                     let wantedWidth = windowWidth-10;
@@ -380,41 +306,8 @@
                 }, 20);
             }
             else{
-                //document.querySelector("#labyrint").style.float="left";
+                document.querySelector("#labyrint").style.float="left";
             }
-
-
-
-            document.querySelector("#inputSize").addEventListener("input", function(e){
-                console.log(e);
-                console.log(this.value);
-                document.querySelector("#displayInputSize").value = this.value;
-                let inpSt = document.querySelector("#inputStart");
-                inpSt.max = parseInt(this.value*4);
-                console.log(inpSt.value + " : " + inpSt.max);
-                document.querySelector("#displayInputStart").value = inpSt.value;
-            });
-
-            document.querySelector("#inputStart").addEventListener("input", function(e){
-                document.querySelector("#displayInputStart").value = this.value;
-            });
-
-            document.querySelector("#makeFromInputs").addEventListener("click", function(e){
-                size_ = parseInt(document.querySelector("#inputSize").value);
-                let width = size_, height = size_;
-                t = createTable(width, height);
-                initCellData(cellData, width, height, fourBitsOn);//setting to a default value 15 = 4 bits of "1"
-                let t2 = createTableFromData(cellData, idLabyrint);
-                document.body.insertBefore(t2,document.querySelector("#entryForm"));  //appendChild(t2);
-                progress(cellData, t2.id);
-                progress_++;
-                progress(cellData, t2.id);
-                document.querySelector("#entryForm").style.display = "none";
-
-                if(windowHeight < windowWidth){
-                    t2.style.float = "left";
-                }
-            });
             }
 
             function createTable(w, h){
@@ -874,7 +767,10 @@
 
                 switch(progress_){
                     case 0:
-                        let val = parseInt(document.querySelector("#inputStart").value);
+                        let val = "x";
+                        do{
+                            val = parseInt(prompt(msg[progress_]));
+                        }while(!integerGate(val,1, (size_*4)))
 
                         message("Entry space is ok");
                         cData.entrySpace = val;
@@ -893,8 +789,6 @@
                         //Move in bulldozer
                         //let targetHtmlCell = document.getElementById(tableId).getElementsByTagName("td")[updateData[0]];
                         moveToPosition(tableId, updateData[0]);
-
-                        document.querySelector("#bulldozer").className ="";
                     break;
                 }
             }
@@ -1484,22 +1378,6 @@
                     return false;
                 }
             }
-            function handleInputSize(e){
-                console.log(e);
-            }
-            function handleInputStart(e){
-                console.log(e);
-            }
-            function makeNewRange(id, min, max, val){
-                let newE = document.createElement("input");
-                newE.type = "range";
-                newE.min = min;
-                newE.max = max;
-                newE.value = val;
-                newE.id = id;
-                return newE;
-            }
         </script>
     </body>
-<!--edited 20250829-->
 </html>

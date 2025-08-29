@@ -10,6 +10,7 @@
             }
 			body{
 				margin: 14px;
+                font-size: 16px;
 			}
             table{
                 border: 0px solid #ddd;
@@ -37,6 +38,7 @@
                 font-size: 2rem;
                 font-family: 'Courier New', Courier, monospace;
                 font-weight: 700;
+                font-style: italic;
             }
             .s0000{
                 border: 0px solid #444;
@@ -163,6 +165,9 @@
                 left:-1000px;
                 width: 0;
             }
+            div#entryForm h1{
+                font-size: 2.3em;
+            }
 
             div#entryForm img{
                 width:190px;
@@ -176,31 +181,89 @@
             }
             #entryForm button{
                 font-size: 2em;
-                padding:10px;
+                padding:20px;
                 margin:20px auto;
                 display: block;
+                font-weight: bold;
+                color: #37a;
+            }
+            #entryForm label{
+                font-size: 2em;
             }
             #inputSize, #inputStart{
-                width:200px;
-                vertical-align: -4px;
-            }
-            .slider::-webkit-slider-thumb {
-                width: 20px;
-                height: 30px;
-                background: #f00;
-                cursor: pointer;
-                border: 5px solid #000;
-                border-radius: 4px;
+                width:270px;
+                vertical-align: 3px;
             }
 
-            /* for firefox */
-            .slider::-moz-range-thumb {
-                width: 20px;
-                height: 30px;
-                background: #f00;
-                cursor: pointer;
-                border: 5px solid #000;
-                border-radius: 4px;
+
+            button#makeNew{
+                font-size: 2em;
+                padding:20px;
+                margin:20px auto;
+                display: block;
+                font-weight: bold;
+                color: #A73;
+            }
+            
+
+            /*input range*/
+            /*********** Baseline, reset styles ***********/
+            input[type="range"] {
+              -webkit-appearance: none;
+              appearance: none;
+              background: transparent;
+              cursor: pointer;
+            }
+
+            /* Removes default focus */
+            input[type="range"]:focus {
+              outline: none;
+            }
+
+            /******** Chrome, Safari, Opera and Edge Chromium styles ********/
+            /* slider track */
+            input[type="range"]::-webkit-slider-runnable-track {
+              background-color: #d3e3e9;
+              border-radius: 0.5rem;
+              height: 0.5rem;
+            }
+
+            /* slider thumb */
+            input[type="range"]::-webkit-slider-thumb {
+              -webkit-appearance: none; /* Override default look */
+              appearance: none;
+              margin-top: -6.4px; /* Centers thumb on the track */
+              background-color: #d1623d;
+              border-radius: 0.8rem;
+              height: 1.5rem;
+              width: 1.5rem;
+            }
+
+            input[type="range"]:focus::-webkit-slider-thumb {
+              outline: 3px solid #d1623d;
+              outline-offset: 0.125rem;
+            }
+
+            /*********** Firefox styles ***********/
+            /* slider track */
+            input[type="range"]::-moz-range-track {
+              background-color: #d3e3e9;
+              border-radius: 0.5rem;
+              height: 0.5rem;
+            }
+
+            /* slider thumb */
+            input[type="range"]::-moz-range-thumb {
+              background-color: #d1623d;
+              border: none; /*Removes extra border that FF applies*/
+              border-radius: 0.8rem;
+              height: 1.5rem;
+              width: 1.5rem;
+            }
+
+            input[type="range"]:focus::-moz-range-thumb{
+              outline: 3px solid #d1623d;
+              outline-offset: 0.125rem;
             }
         </style>
     </head>
@@ -370,8 +433,6 @@
                         bulldozer_.imgElem.src = bulldozerImgs_[(updateData[1]+1)%4];                                
                     }
                     moveToPosition(t2.id, updateData[0]);
-
-
 
                     progress(cellData, t2.id);
                     if(!urlDataOk)
@@ -1295,6 +1356,15 @@
                         element.parentNode.removeChild(element);
                     }
                 )
+
+                let makeNew = document.createElement("button");
+                makeNew.innerHTML = "Make new";
+                makeNew.id = "makeNew";
+                makeNew.addEventListener("click", function(e){
+                    window.location = "index.html";
+                });
+                document.querySelector("#dialog").appendChild(makeNew);
+                document.querySelector("#messageBox").rows=1;
             }
 
             //exitDir direction when exiting

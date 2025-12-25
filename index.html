@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<title>Mini Asteroids – komplexa tal</title>
+<style>
+  body { margin: 0; background: black; overflow: hidden; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// ===== KOMPLEXA TAL =====
+const C = (re, im) => ({ re, im });
+
+const add = (a, b) => C(a.re + b.re, a.im + b.im);
+
+const mul = (a, b) => C(
+  a.re * b.re - a.im * b.im,
+  a.re * b.im + a.im * b.re
+);
+
+const scale = (z, s) => C(z.re * s, z.im * s);
+
+const rot = angle => C(Math.cos(angle), Math.sin(angle));
+
+// ===== SPELVARIABLER =====
+let ship = {
+  pos: C(canvas.width / 2, canvas.height / 2),
+  vel: C(0, 0),
+  dir: C(1, 0)
+};
+
+let bullets = [];
+let asteroids = [];
+
+for (let i = 0; i < 6; i++) {
+  asteroids.push({
+    pos: C(Math.random() * canvas.width, Math.random() * canvas.height),
+    vel: C(Math.random() - 0.5, Math.random() - 0.5),
+    r: 30
+  });
+}
+
+let keys = {};
+
+// ===== INPUT =====
+window.addEventListener("keydown", e => keys[e.key] = true);
+window.addEventListener("keyup", e => keys[e.key] = false);
+
+// ===== SKÄRM-WRAP =====
+function wrap(obj) {
+  obj.pos.re = (obj.pos.re + canvas.width) % canvas.width;
+  obj.pos.im = (obj.pos.im + canvas.height) % canvas.height;
+}
+
+// ===== GAME LOOP =====
+function update() {
+  // Rotation
+  if (keys["ArrowLeft"]) ship.dir = mul(ship.dir, rot(-0.08));
+  if (keys["ArrowRight"]) ship.dir = mul(ship.dir, rot(0.08));
+
+  // Acceleration
+  if (keys["ArrowUp"]) {
+    ship.vel = add(ship.vel, scale(ship.dir, 0.15));
+  }
+
+  // Skott
+  if (keys[" "]) {
+    if (!keys._fireLock) {
+      bullets.push({
+        pos: C(ship.pos.re, ship.pos.im),
+        vel: scale(ship.dir, 8),
+        life: 60
+      });
+      keys._fireLock = true;
+    }
+  } else {
+    keys._fireLock = false;
+  }
+
+  // Uppdatera skepp
+  ship.pos = add(ship.pos, ship.vel);
+  ship.vel = scale(ship.vel, 0.99); // friktion
+  wrap(ship);
+
+  // Uppdatera skott
+  bullets = bullets.filter(b => b.life-- > 0);
+  bullets.forEach(b => {
+    b.pos = add(b.pos, b.vel);
+    wrap(b);
+  });
+
+  // Uppdatera asteroider
+  asteroids.forEach(a => {
+    a.pos = add(a.pos, a.vel);
+    wrap(a);
+  });
+
+  draw();
+  requestAnimationFrame(update);
+}
+
+// ===== RITA =====
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Skepp
+  ctx.save();
+  ctx.translate(ship.pos.re, ship.pos.im);
+  ctx.rotate(Math.atan2(ship.dir.im, ship.dir.re));
+  ctx.beginPath();
+  ctx.moveTo(15, 0);
+  ctx.lineTo(-10, -8);
+  ctx.lineTo(-6, 0);
+  ctx.lineTo(-10, 8);
+  ctx.closePath();
+  ctx.strokeStyle = "white";
+  ctx.stroke();
+  ctx.restore();
+
+  // Skott
+  bullets.forEach(b => {
+    ctx.fillStyle = "white";
+    ctx.fillRect(b.pos.re - 2, b.pos.im - 2, 4, 4);
+  });
+
+  // Asteroider
+  asteroids.forEach(a => {
+    ctx.beginPath();
+    ctx.arc(a.pos.re, a.pos.im, a.r, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+}
+
+update();
+</script>
+
+</body>
+</html>

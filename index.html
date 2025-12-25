@@ -13,12 +13,14 @@
 <canvas id="game"></canvas>
 
 <script>
-	if(window.screen.height > window.screen.width){
-		let answ = confirm("Switch to mobile friendly screen?");
-		if(answ){
-			window.location.assign("https://valterekholm.github.io/index_251225.html");
-		}
+
+if(window.screen.height > window.screen.width && window.location.hostname.includes("github")){
+	let answ = confirm("Switch to mobile friendly screen?");
+	if(answ){
+		window.location.assign("https://valterekholm.github.io/index_251225.html");
 	}
+}
+	
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
@@ -69,8 +71,11 @@ function wrap(obj) {
   obj.pos.im = (obj.pos.im + canvas.height) % canvas.height;
 }
 
+let gameOver = false;
 // ===== GAME LOOP =====
 function update() {
+  if(gameOver) return;
+  
   // Rotation
   if (keys["ArrowLeft"]) ship.dir = mul(ship.dir, rot(-0.08));
   if (keys["ArrowRight"]) ship.dir = mul(ship.dir, rot(0.08));
@@ -132,13 +137,17 @@ function update() {
   //kollision
   asteroids.forEach(a => {
 	if(dist(ship.pos, a.pos) < a.r + 10){
-		alert("BOOM");
-		location.reload();
+		//alert("BOOM");
+		setTimeout(function(){
+			location.reload();
+		}, 800);
+		gameOver = true;
 	}
    });
 
   draw();
-  requestAnimationFrame(update);
+  if(!gameOver)
+	requestAnimationFrame(update);
 }
 
 // ===== RITA =====
@@ -205,7 +214,6 @@ function splitAsteroid(a) {
 
 update();
 </script>
-<!-- Code made with partly with usage of chatGPT, 20251225, after the leading question "Hur kan imaginära tal användas?" -->
+<!-- Code made with partly with usage of chatGPT, 20251225, after the leading question "Hur kan imaginära tal användas?", 3.V.E -->
 </body>
 </html>
-

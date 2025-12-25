@@ -1363,7 +1363,7 @@
                 makeNew.innerHTML = "Make new";
                 makeNew.id = "makeNew";
                 makeNew.addEventListener("click", function(e){
-                    window.location = "index.html";
+                    window.location = window.location.origin + window.location.pathname;
                 });
                 document.querySelector("#dialog").appendChild(makeNew);
                 document.querySelector("#messageBox").rows=1;
@@ -1609,6 +1609,7 @@
         </script>
     </body>
 </html>
+
 
 
 

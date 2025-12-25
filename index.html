@@ -13,6 +13,12 @@
 <canvas id="game"></canvas>
 
 <script>
+	if(window.screen.height > window.screen.width){
+		let answ = confirm("Switch to mobile friendly screen?");
+		if(answ){
+			window.location.assign("https://valterekholm.github.io/index_251225.html");
+		}
+	}
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
@@ -202,3 +208,4 @@ update();
 <!-- Code made with partly with usage of chatGPT, 20251225, after the leading question "Hur kan imaginära tal användas?" -->
 </body>
 </html>
+

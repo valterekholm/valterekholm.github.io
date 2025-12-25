@@ -100,11 +100,36 @@ function update() {
     wrap(b);
   });
 
+  let newAsteroids = [];
   // Uppdatera asteroider
   asteroids.forEach(a => {
     a.pos = add(a.pos, a.vel);
     wrap(a);
+	
+	bullets.forEach(b => {
+		if(dist(a.pos, b.pos) < a.r){
+			b.life = 0 // ta bort skott
+			
+			newAsteroids.push(...splitAsteroid(a));
+			
+			a.dead = true;
+		}
+	})
   });
+  
+  //Filtrera bort träffade asteroider
+  asteroids = asteroids.filter(a => !a.dead);
+  
+  //Lägg till nya
+  asteroids.push(...newAsteroids);
+  
+  //kollision
+  asteroids.forEach(a => {
+	if(dist(ship.pos, a.pos) < a.r + 10){
+		alert("BOOM");
+		location.reload();
+	}
+   });
 
   draw();
   requestAnimationFrame(update);
@@ -132,18 +157,48 @@ function draw() {
   bullets.forEach(b => {
     ctx.fillStyle = "white";
     ctx.fillRect(b.pos.re - 2, b.pos.im - 2, 4, 4);
-  });
+  }); 
 
   // Asteroider
   asteroids.forEach(a => {
     ctx.beginPath();
     ctx.arc(a.pos.re, a.pos.im, a.r, 0, Math.PI * 2);
+	ctx.strokeStyle = "white";
     ctx.stroke();
   });
 }
 
+function dist(a, b){
+	const dx = a.re - b.re;
+	const dy = a.im - b.im;
+	return Math.sqrt(dx*dx + dy*dy);
+}
+
+function hit(a, b, radius){
+	return dist(a.pos, b.pos) < radius;
+}
+
+function splitAsteroid(a) {
+	if(a.r < 15) return [];
+	
+	const angle = Math.random() * Math.PI * 2;
+	
+	return [
+		{
+			pos: C(a.pos.re, a.pos.im),
+			vel: add(a.vel, mul(rot(angle), C(1,0))),
+			r: a.r / 2
+		},
+		{
+			pos: C(a.pos.re, a.pos.im),
+			vel: add(a.vel, mul(rot(angle + Math.PI), C(1,0))),
+			r: a.r / 2
+		}
+	];
+}
+
 update();
 </script>
-
+<!-- Code made with partly with usage of chatGPT, 20251225, after the leading question "Hur kan imaginära tal användas?" -->
 </body>
 </html>
